@@ -1,0 +1,10 @@
+version: 2.0
+shards:
+  grpc:
+    git: https://github.com/bendangelo/grpc.git
+    version: 0.1.4+git.commit.e5e8f15e61b5d9eb314cd9c7a02d036dc3829b30
+
+  protobuf:
+    git: https://github.com/jeromegn/protobuf.cr.git
+    version: 2.3.0+git.commit.d4de0f273790f96e8c6dc5437d202422a88e2743
+

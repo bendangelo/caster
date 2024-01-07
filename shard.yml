@@ -1,0 +1,16 @@
+name: caster
+
+authors:
+  - Ben D'Angelo <ben@bendangelo.me>
+
+targets:
+  caster:
+    main: src/caster.cr
+
+dependencies:
+  grpc:
+    github: bendangelo/grpc
+
+crystal: '>= 1.10.1'
+
+license: MIT
