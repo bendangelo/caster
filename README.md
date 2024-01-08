@@ -6,7 +6,7 @@ TODO: Write a description here
 
 ```
 curl -fsSL https://crystal-lang.org/install.sh | sudo bash
-apt install -y protobuf-compiler
+sudo apt-get -y install librocksdb-dev
 ```
 
 ## Usage

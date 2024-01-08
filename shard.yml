@@ -1,4 +1,5 @@
 name: caster
+version: 0.1.0
 
 authors:
   - Ben D'Angelo <ben@bendangelo.me>
@@ -8,8 +9,13 @@ targets:
     main: src/caster.cr
 
 dependencies:
-  grpc:
-    github: bendangelo/grpc
+  rocksdb:
+    github: maiha/rocksdb.cr
+    version: 1.1.0
+
+  xxhash:
+    github: bendangelo/xxhash
+    branch: upgraded-to-0-8-1
 
 crystal: '>= 1.10.1'
 
