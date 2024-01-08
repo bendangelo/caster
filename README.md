@@ -7,11 +7,15 @@ TODO: Write a description here
 ```
 curl -fsSL https://crystal-lang.org/install.sh | sudo bash
 sudo apt-get -y install librocksdb-dev
+curl -fsSLo- https://raw.githubusercontent.com/samueleaton/sentry/master/install.cr | crystal eval
+./sentry
 ```
 
-## Usage
+## Build
 
-TODO: Write usage instructions here
+```
+shards build --release
+```
 
 ## Development
 

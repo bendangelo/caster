@@ -1,7 +1,6 @@
 require "./spec_helper"
 
-describe Caster do
-  # TODO: Write tests
+Spectator.describe Caster do
 
   it "works" do
     false.should eq(true)

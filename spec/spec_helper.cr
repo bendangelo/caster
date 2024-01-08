@@ -1,2 +1,2 @@
-require "spec"
-require "../src/caster"
+require "../src/config/application"
+require "spectator"

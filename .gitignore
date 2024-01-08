@@ -6,3 +6,5 @@
 
 /data/store/kv/*
 !/data/store/kv/.keep
+sentry
+caster

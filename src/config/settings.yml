@@ -1,0 +1,25 @@
+log_level: 0
+colorize: true
+
+inet: "localhost"
+port: 1491
+tcp_timeout: 300
+  #auth_password: "SecretPassword"
+
+search:
+  query_limit_default: 10
+  query_limit_maximum: 100
+
+kv:
+  path: "./data/store/kv/"
+  pool:
+    inactive_after: 1800
+  database:
+    flush_after: 900
+    compress: true
+    parallelism: 2
+    max_files: 100
+    max_compactions: 1
+    max_flushes: 1
+    write_buffer: 16384
+    write_ahead_log: true
