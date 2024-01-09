@@ -19,7 +19,9 @@ shards build --release
 
 ## Development
 
-TODO: Write development instructions here
+```
+./sentry -r "crystal" --run-args "spec --debug" -w "./spec/**/*" -w "./src/**/*" 
+```
 
 ## Contributing
 

@@ -5,70 +5,108 @@ module Pipe
     Continue
   end
 
-  module MessageMode
-    def self.handle(message : String) : Tuple(ResponseType, String)
-      command, parts = extract message
-
-      type, msg = handle_mode message
-
-      if type != ResponseType.None
-        return {type, msg}
-      end
-
-      case command
-      when "PING"
-        {ResponseType.Pong, ""}
-      when "QUIT"
-        {ResponseType.Ended, "quit"}
-      else
-        {ResponseType.None, ""}
-      end
-    end
-
-    def self.handle_mode(message)
-      {ResponseType.None, ""}
-    end
-
-    def self.extract(message : String) : {String, Array(String)}
-      # Extract command name and arguments
-      parts = message.split " "
-      command = parts.first.to_s.upcase
-
-      debug "will dispatch search command: #{command}"
-
-      parts.shift
-
-      {command, parts}
-    end
-  end
-
   class Message
     COMMAND_ELAPSED_MILLIS_SLOW_WARN = 50_u128
 
-    def self.on(mode : MessageMode, stream : TCPSocket, message_slice : Slice(UInt8))
-      message = String.new(message_slice)
-      command_start = Time.monotonic
-      result = MessageResult::Continue
+    def self.handle_mode(mode : Mode, message : String) : CommandResult
+      command, parts = extract message
 
-      Log.debug { "got pipe message: #{message}" }
+      case command
+      when "PING"
+        CommandResult.new ResponseType::Pong
+      when "QUIT"
+        CommandResult.new ResponseType::Ended, "quit"
+      else
+        case mode
+        when Mode::Search
+          search_mode command, parts
+        when Mode::Ingest
+          ingest_mode command, parts
+        when Mode::Control
+          control_mode command, parts
+        else
+          CommandResult.new ResponseType::Void, "unhandled command"
+        end
+      end
+
+    end
+
+    def self.search_mode(command, parts)
+      case command
+      # when "QUERY"
+      #   SearchCommand.dispatch_query parts
+        # when "SUGGEST"
+        #   return SearchCommand.dispatch_suggest parts
+        # when "LIST"
+        #   return SearchCommand.dispatch_list parts
+        # when "HELP"
+        #   return SearchCommand.dispatch_list parts
+      else
+        CommandResult.new ResponseType::Void, "command not found"
+      end
+    end
+
+    def self.ingest_mode(command, parts)
+      case command
+      when "PUSH"
+        IngestCommand.dispatch_push parts
+      when "POP"
+        IngestCommand.dispatch_pop parts
+        # when "COUNT"
+        #   IngestCommand.dispatch_count parts
+        # when "FLUSHC"
+        #   IngestCommand.dispatch_flushc parts
+        # when "FLUSHB"
+        #   IngestCommand.dispatch_flushb parts
+        # when "FLUSHO"
+        #   IngestCommand.dispatch_flusho parts
+        # when "HELP"
+        #   return SearchCommand.dispatch_list parts
+      else
+        CommandResult.new ResponseType::Void, "command not found"
+      end
+    end
+
+    def self.control_mode(command, parts)
+      case command
+        # when "TRIGGER"
+        #   ControlCommand.dispatch_trigger parts
+        # when "INFO"
+        #   ControlCommand.dispatch_info parts
+        # when "COUNT"
+        #   IngestCommand.dispatch_count parts
+        # when "FLUSHC"
+        #   IngestCommand.dispatch_flushc parts
+        # when "FLUSHB"
+        #   IngestCommand.dispatch_flushb parts
+        # when "FLUSHO"
+        #   IngestCommand.dispatch_flusho parts
+        # when "HELP"
+        #   return SearchCommand.dispatch_list parts
+      else
+        CommandResult.new ResponseType::Void, "command not found"
+      end
+    end
+
+    def self.on(mode, stream, message)
+      command_start = Time.monotonic
+      continue_pipe = MessageResult::Continue
+
+      Log.debug { "got pipe message: (#{message})" }
 
       # TODO: handle shutting down
       # if !CHANNEL_AVAILABLE.read
       #   # Server going down, reject command
       #   response_args_groups = [CommandResponse::Err(CommandError::ShuttingDown).to_args]
       # else
-      response_type, response_values = mode.handle message
+      result = handle_mode mode, message
       # end
 
       # Serve response messages on socket
       # response_args_groups.each do |response_args|
-      if response_type != ResponseType::None
-        # values_string = response_args[1].map(&.to_s).join(" ") if response_args[1]
+      puts_message stream, result.type, result.value
 
-        stream.puts "#{response_type} #{response_values}#{LINE_FEED}"
-
-        Log.debug { "wrote response with values: #{response_type} (#{response_values})" }
-      end
+      continue_pipe = MessageResult::Close if result.type == ResponseType::Ended
       # end
 
       # Measure and log time it took to execute command
@@ -76,7 +114,7 @@ module Pipe
       #   altering commands-related code, or when making changes to underlying store executors.
       command_took = (Time.monotonic - command_start) * 1_000
 
-      if command_took >= COMMAND_ELAPSED_MILLIS_SLOW_WARN
+      if command_took.to_i >= COMMAND_ELAPSED_MILLIS_SLOW_WARN
         Log.warn { "took a lot of time: #{command_took}ms to process pipe message" }
       else
         Log.info { "took #{command_took}ms/#{command_took * 1_000}us/#{command_took * 1_000_000}ns to process channel message" }
@@ -99,32 +137,25 @@ module Pipe
       #
       # COMMANDS_TOTAL.write { |total| total + 1 }
 
-      result
+      continue_pipe
     end
-  end
 
-  class MessageModeSearch
-    extend MessageMode
+    def self.puts_message(stream, response_type, response_values)
+      stream.puts "#{response_type.to_s.upcase} #{response_values}#{Handle::LINE_FEED}"
 
-    def self.handle_mode(message : String)
-      {ResponseType.None, ""}
+      Log.debug { "wrote response with values: #{response_type} (#{response_values})" }
     end
-  end
 
-  class MessageModeIngest
-    extend MessageMode
+    def self.extract(message : String) : {String, Array(String)}
+      # Extract command name and arguments
+      parts = message.split " "
+      command = parts.shift.upcase
 
-    def self.handle_mode(message : String)
-      {ResponseType.None, ""}
+      Log.debug { "will dispatch search command: (#{command})" }
+
+      {command, parts}
     end
-  end
 
-  class MessageModeControl
-    extend MessageMode
-
-    def self.handle_mode(message : String)
-      {ResponseType.None, ""}
-    end
   end
 
 end

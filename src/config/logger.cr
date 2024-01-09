@@ -9,7 +9,7 @@ module Caster
     def self.setup
       Colorize.enabled = Caster.settings.colorize
 
-      Log.setup_from_env
+      Log.setup_from_env default_level: :debug
 
       # Log.formatter = Log::Formatter.new do |entry, io|
       #   io << entry.timestamp.to_s("%I:%M:%S")

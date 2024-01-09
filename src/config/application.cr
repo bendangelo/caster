@@ -6,20 +6,15 @@ require "colorize"
 
 require "./settings"
 require "./logger"
-require "./kv"
-# require "./config/options"
-# require "./config/reader"
-# require "./initializers/**"
+require "./store"
 
-require "../pipe/message"
-require "../pipe/listen"
-require "../pipe/handle"
-require "../pipe/command"
-# require "../pipe/stats"
-# require "./store/fst"
-# require "./store/kv"
-# require "./tasker/runtime"
-# require "./tasker/shutdown"
+require "../pipe/*"
+require "../pipe/commands/*"
+require "../executer/*"
+require "../lexer/*"
+require "../store/*"
+require "../tasker/*"
+require "../query/*"
 
 module Caster
 
@@ -27,8 +22,12 @@ module Caster
     @@settings ||= Settings.from_yaml File.read "./src/config/settings.yml"
   end
 
-  def self.start
+  def self.boot
     Caster::Logger.setup
+  end
+
+  def self.start
+    boot
 
     Log.info { "Starting up!" }
 

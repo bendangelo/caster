@@ -17,6 +17,9 @@ dependencies:
     github: bendangelo/xxhash
     branch: upgraded-to-0-8-1
 
+  # rwlock:
+  #   github: spider-gazelle/readers-writer
+
 development_dependencies:
   spectator:
     gitlab: arctic-fox/spectator
