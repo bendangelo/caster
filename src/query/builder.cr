@@ -70,17 +70,16 @@ module Query
       bucket : String,
       object : String,
       text : String,
-      lang : String?
+      lang_code : String?
     ) : Result?
       store = Store::ItemBuilder.from_depth_3(collection, bucket, object)
-      text_lexed = Lexar::TokenBuilder.from(Lexar::TokenMode.from_query_lang(lang), text)
+      lang, mode = Lexar::TokenBuilder.from_query_lang lang_code
+      text_lexed = Lexar::TokenBuilder.from(mode, text, lang)
 
       return nil if store.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
       return Result.new(Type::Push, store, text_lexed)
-
-      nil
     end
     #
     # def self.pop(

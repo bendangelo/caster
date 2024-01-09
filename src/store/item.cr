@@ -1,13 +1,6 @@
 module Store
 
-  struct Item
-    part1 : ItemPart
-    part2 : ItemPart?
-    part3 : ItemPart?
-
-    def initialize(@part1 : ItemPart, @part2 : ItemPart?, @part3 : ItemPart?)
-    end
-  end
+  record Item, collection : ItemPart, bucket : ItemPart?, object : ItemPart?
 
   struct ItemPart
     value : String

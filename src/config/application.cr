@@ -3,6 +3,8 @@ require "log"
 require "rocksdb"
 require "yaml"
 require "colorize"
+require "dispatch"
+require "xxhash"
 
 require "./settings"
 require "./logger"

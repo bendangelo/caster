@@ -78,11 +78,11 @@ module Lexar
 
   struct Token
     @mode : TokenMode
-    @locale : String?
-    @words : TokenLexerWords
-    @yields : HashBrown::HashSet(StoreTermHashed)
+    @locale : Lang
+    # @words : TokenLexerWords
+    # @yields : HashBrown::HashSet(StoreTermHashed)
 
-    def initialize(@mode : TokenMode, @text : String, @locale : Lang?)
+    def initialize(@mode : TokenMode, @text : String, @locale : Lang)
       # Tokenize words depending on the locale
       # @words = case @locale
       #          when Lang::Cmn?
@@ -98,7 +98,7 @@ module Lexar
       #            TokenLexerWords::UAX29(@text.unicode_words.to_a)
       #          end
 
-      @yields = Set(StoreTermHashed).new
+      # @yields = Set(StoreTermHashed).new
     end
   end
 
@@ -137,32 +137,47 @@ module Lexar
   #   TokenizerJapanese::Tokenizer.new
   # end
 
+  enum Lang
+    None
+    Eng
+  end
+
   module TokenBuilder
 
     TEXT_LANG_TRUNCATE_OVER_CHARS = 200
     TEXT_LANG_DETECT_PROCEED_OVER_CHARS = 20
     TEXT_LANG_DETECT_NGRAM_UNDER_CHARS = 60
 
-    def from(mode : TokenMode, text : String)
+    def self.from_query_lang(lang)
+      # TODO: find lang
+      {Lang::Eng, TokenMode::NormalizeOnly}
+    end
+
+    def self.from(mode, text, lang)
+
       locale = case mode
                when TokenMode::HintedCleanup
                  # Detect text language (current lexer mode asks for cleanup)
-                 puts "detecting locale from lexer text: #{text}"
-                 detect_lang(text)
+                 Log.info { "detecting locale from lexer text: #{text}" }
+                 # detect_lang(text)
+                 Lang::Eng
 
                when TokenMode::NormalizeAndCleanup
                  # Use hinted language (current lexer mode asks for cleanup)
-                 puts "using hinted locale: #{lang} from lexer text: #{text}"
-                 lang
+                 Log.info { "using hinted locale: #{lang} from lexer text: #{text}" }
+                 # lang
+                 Lang::Eng
 
                when TokenMode::NormalizeOnly
-                 puts "not detecting locale from lexer text: #{text}"
+                 Log.info { "not detecting locale from lexer text: #{text}" }
                  # May be 'NormalizeOnly' mode; no need to perform locale detection
-                 nil
+                 Lang::Eng
+               else
+                 Lang::None
                end
 
       # Build final token builder iterator
-      Token.new(mode, text, locale).ok
+      Token.new(mode, text, locale)
     end
 
     # private def detect_lang(text : String) : Lang?

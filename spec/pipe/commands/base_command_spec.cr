@@ -11,6 +11,10 @@ Spectator.describe Pipe::BaseCommand do
       expect(command).to eq %[hey bucket object "text]
     end
 
+    provided parts: [%["hey], "bucket", "object", %[\"text"], "meta data"] do
+      expect(command).to eq %[hey bucket object "text]
+    end
+
     provided parts: [%[hey], %[text"]] do
       expect(command).to eq nil
     end

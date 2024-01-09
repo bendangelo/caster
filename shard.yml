@@ -17,8 +17,12 @@ dependencies:
     github: bendangelo/xxhash
     branch: upgraded-to-0-8-1
 
-  # rwlock:
-  #   github: spider-gazelle/readers-writer
+  rwlock:
+    github: spider-gazelle/readers-writer
+
+  dispatch:
+    github: bendangelo/dispatch
+    branch: upgraded
 
 development_dependencies:
   spectator:
