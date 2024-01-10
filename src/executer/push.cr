@@ -4,19 +4,19 @@ module Executer
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
 
-      collection, bucket, object = item.collection, item.bucket, item.object
+      collection, bucket, object = item.collection.to_s, item.bucket.to_s, item.object.to_s
 
       # if let (Ok(kv_store), Ok(fst_store)) = (
-      #   StoreKVPool.acquire(StoreKVAcquireMode::Any, collection),
+      kv_store = Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
       #   StoreFSTPool.acquire(collection, bucket)
       # )
       # executor_kv_lock_write!(kv_store)
 
-      # kv_action = StoreKVActionBuilder.access(bucket, kv_store)
+      kv_action = Store::KVAction.new(bucket: bucket, store: kv_store)
       # fst_action = StoreFSTActionBuilder.access(fst_store)
 
       # oid = object.as_str
-      # iid = kv_action.get_oid_to_iid(oid).unwrap_or(nil).or do
+      # iid = kv_action.get_oid_to_iid(oid) do
       #   Log.info { "must initialize push executor oid-to-iid and iid-to-oid" }
       #
       #   if let Ok(iid_incr) = kv_action.get_meta_to_value(StoreMetaKey::IIDIncr)
@@ -36,7 +36,7 @@ module Executer
       #     nil
       #   end
       # end
-      #
+
       # if iid.not_nil?
       #   has_commits = false
       #   iid_terms_hashed = LinkedHashSet(StoreTermHashed).new(

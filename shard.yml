@@ -24,6 +24,10 @@ dependencies:
     github: bendangelo/dispatch
     branch: upgraded
 
+  pool:
+    github: ysbaddaden/pool
+    branch: main
+
 development_dependencies:
   spectator:
     gitlab: arctic-fox/spectator

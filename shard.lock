@@ -4,6 +4,10 @@ shards:
     git: https://github.com/bendangelo/dispatch.git
     version: 0.2.0+git.commit.46d3904332d52f9f071fb8e1661ae914c3c237c3
 
+  pool:
+    git: https://github.com/ysbaddaden/pool.git
+    version: 0.3.0+git.commit.de1e315dc2349cb47303c91bd0d6c5f3446629dc
+
   rocksdb:
     git: https://github.com/maiha/rocksdb.cr.git
     version: 1.1.0

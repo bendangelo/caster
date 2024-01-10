@@ -4,6 +4,7 @@ require "rocksdb"
 require "yaml"
 require "colorize"
 require "dispatch"
+require "rwlock"
 require "xxhash"
 
 require "./settings"

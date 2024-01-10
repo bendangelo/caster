@@ -18,7 +18,7 @@ module Store
       end
     end
 
-    def as_str : String
+    def to_s : String
       @value
     end
   end

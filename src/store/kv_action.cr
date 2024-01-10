@@ -1,5 +1,11 @@
 module Store
-  class StoreKVAction
+  struct KVAction
+    property bucket : String
+    property store : KVStore
+
+    def initialize(@bucket : String, @store : KVStore)
+    end
+
     #   include StoreGenericAction
     #   alias StoreKeyerKey = Tuple(UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
     #   alias StoreKeyerPrefix = Tuple(UInt8, UInt8, UInt8, UInt8, UInt8)
