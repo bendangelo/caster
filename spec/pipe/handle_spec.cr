@@ -90,10 +90,32 @@ Spectator.describe Pipe::Handle do
 
     # short for testing
     let(max_line_size) { 10 }
+    let(run_loop) { false }
+
+    context "PING sent" do
+
+      double :tcpsocket, gets_input: "PING\n", puts: nil do
+          stub def read(buffer)
+            slice = gets_input.to_unsafe.to_slice(gets_input.size)
+
+            slice.copy_to buffer
+
+            gets_input.size
+          end
+      end
+
+      let(tcpsocket) { double(:tcpsocket) }
+
+      it "pongs without extra space" do
+        expect(tcpsocket).to receive(:puts).with("PONG#{Handle::LINE_FEED}")
+
+        Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
+      end
+    end
 
     context "QUIT sent" do
 
-      double :tcpsocket, gets_input: "QUIT#{Handle::LINE_FEED}", puts: nil do
+      double :tcpsocket, gets_input: "QUIT\n", puts: nil do
           stub def read(buffer)
             slice = gets_input.to_unsafe.to_slice(gets_input.size)
 
@@ -105,9 +127,9 @@ Spectator.describe Pipe::Handle do
       let(tcpsocket) { double(:tcpsocket) }
 
       it "quits" do
-        # expect(tcpsocket).to receive(:puts).with("Ended quit#{Handle::LINE_FEED}")
+        expect(tcpsocket).to receive(:puts).with("ENDED quit#{Handle::LINE_FEED}")
 
-        Handle.handle_stream(Mode::Search, tcpsocket, max_line_size)
+        Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
       end
     end
 

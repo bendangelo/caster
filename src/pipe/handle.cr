@@ -72,7 +72,7 @@ module Pipe
       stream.write_timeout = tcp_timeout * 60
     end
 
-    def self.handle_stream(mode, stream, max_line_size = MAX_LINE_SIZE)
+    def self.handle_stream(mode, stream, max_line_size = MAX_LINE_SIZE, run_loop = true)
       # Initialize packet buffer
       buffer = Slice(UInt8).new(max_line_size)
 
@@ -80,7 +80,6 @@ module Pipe
       loop do
         read_length = stream.read(buffer)
 
-        # Should close?
         break if read_length == 0
 
         # Buffer overflow?
@@ -109,7 +108,7 @@ module Pipe
           if byte == BUFFER_LINE_SEPARATOR
 
             # create line for message
-            message = String.new(processed_line[0, processed_index - 1])
+            message = String.new(processed_line[0, processed_index])
 
             if Message.on(mode, stream, message) == MessageResult::Close
               return
@@ -128,6 +127,8 @@ module Pipe
 
         # Incomplete line remaining? Put it back in buffer.
         buffer += processed_line unless processed_index == 0
+
+        break if !run_loop
       end
     end
 

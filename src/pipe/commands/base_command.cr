@@ -26,7 +26,7 @@ module Pipe
 
   struct CommandResult
     property type
-    property value = ""
+    property value = nil
     property error = CommandError::None
 
     def initialize(@type : ResponseType)

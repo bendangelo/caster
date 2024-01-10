@@ -14,7 +14,7 @@ module Pipe
       case command
       when "PING"
         CommandResult.new ResponseType::Pong
-      when "QUIT"
+      when "QUIT", "EXIT"
         CommandResult.new ResponseType::Ended, "quit"
       else
         case mode
@@ -141,15 +141,21 @@ module Pipe
     end
 
     def self.puts_message(stream, response_type, response_values)
-      stream.puts "#{response_type.to_s.upcase} #{response_values}#{Handle::LINE_FEED}"
+      if response_values.nil?
+        message = "#{response_type.to_s.upcase}#{Handle::LINE_FEED}"
+      else
+        message = "#{response_type.to_s.upcase} #{response_values}#{Handle::LINE_FEED}"
+      end
 
-      Log.debug { "wrote response with values: #{response_type} (#{response_values})" }
+      stream.puts message
+
+      Log.debug { "wrote response with values: (#{message})" }
     end
 
     def self.extract(message : String) : {String, Array(String)}
       # Extract command name and arguments
       parts = message.split " "
-      command = parts.shift.upcase
+      command = parts.shift
 
       Log.debug { "will dispatch search command: (#{command})" }
 
