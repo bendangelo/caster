@@ -92,6 +92,8 @@ Spectator.describe Pipe::Handle do
     let(max_line_size) { 10 }
     let(run_loop) { false }
 
+    # TODO: test having multiple messages in one gets
+
     context "PING sent" do
 
       double :tcpsocket, gets_input: "PING\n", puts: nil do

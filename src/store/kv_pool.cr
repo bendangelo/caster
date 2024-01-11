@@ -5,63 +5,6 @@ module Store
     OpenOnly
   end
 
-  class KVStore
-    property db : RocksDB::DB
-    property last_used : Atomic(Int64)
-    property last_flushed : Atomic(Int64)
-    property lock : RWLock
-
-    def initialize(@db : RocksDB::DB, @last_used :  Atomic(Int64), @last_flushed : Atomic(Int64))
-      @lock = RWLock.new
-    end
-
-    def close
-      @db.close
-    end
-
-    # def get(key : Slice(UInt8)) : Result(Option(Bytes), DBError)
-    #   @database.get(key)
-    # end
-    #
-    # def put(key : Slice(UInt8), data : Slice(UInt8)) : Result(Nil, DBError)
-    #   batch = WriteBatch.new
-    #   batch.put(key, data)
-    #   do_write(batch)
-    # end
-    #
-    # def delete(key : Slice(UInt8)) : Result(Nil, DBError)
-    #   batch = WriteBatch.new
-    #   batch.delete(key)
-    #   do_write(batch)
-    # end
-    #
-    # private def flush : Result(Nil, DBError)
-    #   # Generate flush options
-    #   flush_options = FlushOptions.new
-    #   flush_options.wait = true
-    #
-    #   # Perform flush (in blocking mode)
-    #   @database.flush_opt(flush_options)
-    # end
-    #
-    # private def do_write(batch : WriteBatch) : Result(Nil, DBError)
-    #   # Configure this write
-    #   write_options = WriteOptions.new
-    #
-    #   # WAL disabled?
-    #   if !APP_CONF.store.kv.database.write_ahead_log
-    #     puts "ignoring wal for kv write"
-    #     write_options.disable_wal(true)
-    #   else
-    #     puts "using wal for kv write"
-    #     write_options.disable_wal(false)
-    #   end
-    #
-    #   # Commit this write
-    #   @database.write_opt(batch, write_options)
-    # end
-  end
-
   class KVPool
 
     @@store_pool = {} of UInt32 => KVStore

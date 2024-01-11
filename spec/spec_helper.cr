@@ -2,8 +2,14 @@ require "../src/config/application"
 require "./support/*"
 require "spectator"
 require "spectator/should"
+require "file_utils"
 
 Caster.boot
+
+# clear rocksdb
+Caster.settings.kv.path = "./data/tmp/"
+FileUtils.rm_rf("./data/tmp")
+FileUtils.mkdir("./data/tmp")
 
 Spectator.configure do |config|
   # config.fail_blank # Fail on no tests.

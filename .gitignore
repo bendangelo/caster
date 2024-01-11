@@ -6,5 +6,6 @@
 
 /data/store/kv/*
 !/data/store/kv/.keep
+/data/tmp/*
 sentry
 caster

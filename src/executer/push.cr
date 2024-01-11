@@ -4,7 +4,16 @@ module Executer
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
 
-      collection, bucket, object = item.collection.to_s, item.bucket.to_s, item.object.to_s
+      collection, bucket, object = item.collection, item.bucket, item.object
+
+      if bucket.nil?
+        Log.error { "bucket is nil" }
+        return
+      end
+      if object.nil?
+        Log.error { "object is nil" }
+        return
+      end
 
       # if let (Ok(kv_store), Ok(fst_store)) = (
       kv_store = Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
@@ -15,27 +24,21 @@ module Executer
       kv_action = Store::KVAction.new(bucket: bucket, store: kv_store)
       # fst_action = StoreFSTActionBuilder.access(fst_store)
 
-      # oid = object.as_str
-      # iid = kv_action.get_oid_to_iid(oid) do
-      #   Log.info { "must initialize push executor oid-to-iid and iid-to-oid" }
-      #
-      #   if let Ok(iid_incr) = kv_action.get_meta_to_value(StoreMetaKey::IIDIncr)
-      #     iid_incr = iid_incr.nil? ? 0 : iid_incr.to_i
-      #
-      #     if kv_action.set_meta_to_value(StoreMetaKey::IIDIncr, StoreMetaValue::IIDIncr(iid_incr)).ok?
-      #       executor_ensure_op!(kv_action.set_oid_to_iid(oid, iid_incr))
-      #       executor_ensure_op!(kv_action.set_iid_to_oid(iid_incr, oid))
-      #
-      #       iid_incr.to_i
-      #     else
-      #       Log.error { "failed updating push executor meta-to-value iid increment" }
-      #       nil
-      #     end
-      #   else
-      #     Log.error { "failed getting push executor meta-to-value iid increment" }
-      #     nil
-      #   end
-      # end
+      # Try to resolve existing OID to IID, otherwise initialize IID (store the
+      #   bi-directional relationship)
+      oid = object
+      iid = kv_action.get_oid_to_iid(oid) do |store_key|
+        Log.info { "must initialize push executor oid-to-iid and iid-to-oid" }
+
+        iid_incr = kv_action.get_meta_to_value(Store::IIDIncr)
+        iid_incr = (iid_incr.nil? ? 0_u32 : iid_incr.to_u32) + 1
+
+        kv_action.set_meta_to_value(Store::IIDIncr, iid_incr)
+        kv_action.set_oid_to_iid(oid, iid_incr)
+        kv_action.set_iid_to_oid(iid_incr, oid)
+
+        iid_incr
+      end
 
       # if iid.not_nil?
       #   has_commits = false

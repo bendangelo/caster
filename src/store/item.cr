@@ -1,27 +1,6 @@
 module Store
 
-  record Item, collection : ItemPart, bucket : ItemPart?, object : ItemPart?
-
-  struct ItemPart
-    value : String
-
-    def initialize(@value : String)
-    end
-
-    def self.from_str(part : String)
-      len = part.size
-
-      if len > STORE_ITEM_PART_LEN_MIN && len <= STORE_ITEM_PART_LEN_MAX && part.ascii_only?
-        ItemPart.new(part)
-      else
-        nil
-      end
-    end
-
-    def to_s : String
-      @value
-    end
-  end
+  record Item, collection : String, bucket : String?, object : String?
 
   enum ItemError
     InvalidCollection
@@ -33,9 +12,20 @@ module Store
   STORE_ITEM_PART_LEN_MAX = 128
 
   module ItemBuilder
+
+    def self.from_str(part : String)
+      len = part.size
+
+      if len > STORE_ITEM_PART_LEN_MIN && len <= STORE_ITEM_PART_LEN_MAX && part.ascii_only?
+        part
+      else
+        nil
+      end
+    end
+
     def self.from_depth_1(collection : String)
       # Validate & box collection
-      if (collection_item = ItemPart.from_str(collection))
+      if (collection_item = from_str(collection))
         Item.new(collection_item, nil, nil)
       else
         ItemError::InvalidCollection
@@ -44,8 +34,8 @@ module Store
 
     def self.from_depth_2(collection : String, bucket : String)
       # Validate & box collection + bucket
-      if (collection_item = ItemPart.from_str(collection)) &&
-          (bucket_item = ItemPart.from_str(bucket))
+      if (collection_item = from_str(collection)) &&
+          (bucket_item = from_str(bucket))
         Item.new(collection_item, bucket_item, nil)
       elsif collection_item.nil?
         ItemError::InvalidCollection
@@ -56,9 +46,9 @@ module Store
 
     def self.from_depth_3(collection : String, bucket : String, object : String)
       # Validate & box collection + bucket + object
-      if (collection_item = ItemPart.from_str(collection)) &&
-          (bucket_item = ItemPart.from_str(bucket)) &&
-          (object_item = ItemPart.from_str(object))
+      if (collection_item = from_str(collection)) &&
+          (bucket_item = from_str(bucket)) &&
+          (object_item = from_str(object))
         Item.new(collection_item, bucket_item, object_item)
       elsif collection_item.nil?
         ItemError::InvalidCollection

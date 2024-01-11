@@ -80,7 +80,7 @@ module Lexar
     @mode : TokenMode
     @locale : Lang
     # @words : TokenLexerWords
-    # @yields : HashBrown::HashSet(StoreTermHashed)
+    # @yields : HashBrown::HashSet(TermHash)
 
     def initialize(@mode : TokenMode, @text : String, @locale : Lang)
       # Tokenize words depending on the locale
@@ -98,7 +98,7 @@ module Lexar
       #            TokenLexerWords::UAX29(@text.unicode_words.to_a)
       #          end
 
-      # @yields = Set(StoreTermHashed).new
+      # @yields = Set(TermHash).new
     end
   end
 
@@ -274,7 +274,7 @@ module Lexar
     # end
 
     # impl<'a> TokenLexerIterator for Token<'a>
-    #   def next : Tuple(String, StoreTermHashed)?
+    #   def next : Tuple(String, TermHash)?
     #     while word = @words.next
     #       # Lower-case word
     #       word = word.downcase

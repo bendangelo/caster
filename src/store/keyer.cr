@@ -47,7 +47,7 @@ module Store
       Keyer.new(build_key(Idx::MetaToValue.value.to_u8, bucket, route))
     end
 
-    def self.term_to_iids(bucket : String, term_hash : UInt32) : Keyer
+    def self.term_to_iids(bucket : String, term_hash : TermHash) : Keyer
       route = term_hash
 
       Keyer.new(build_key(Idx::TermToIIDs.value.to_u8, bucket, route))
