@@ -65,8 +65,8 @@ Spectator.describe Store::Keyer do
         expect(result1.as_bytes.size).to eq 9
         expect(result2.as_bytes.size).to eq 9
 
-        expect(result1.to_s).to eq("'1:498b1971:83ba4c04' Bytes[1, 73, 139, 25, 113, 131, 186, 76, 4]")
-        expect(result2.to_s).to eq("'0:498b1971:00000000' Bytes[0, 73, 139, 25, 113, 0, 0, 0, 0]")
+        expect(result1.to_s).to eq("1:498b1971:83ba4c04 Bytes[1, 73, 139, 25, 113, 131, 186, 76, 4]")
+        expect(result2.to_s).to eq("0:498b1971:00000000 Bytes[0, 73, 139, 25, 113, 0, 0, 0, 0]")
       end
   end
 end

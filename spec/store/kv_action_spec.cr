@@ -36,27 +36,27 @@ Spectator.describe Store::KVAction do
     end
   end
 
-  describe "#encode_u32_list" do
-    subject { KVAction.encode_u32_list input }
+  describe "#encode_u32_set" do
+    subject { KVAction.encode_u32_set input }
 
-    provided input: UInt32[0, 2, 3] do
+    provided input: Set.new UInt32[0, 2, 3] do
       expect(subject).to eq Bytes[0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
     end
 
-    provided input: UInt32[45402] do
+    provided input: Set.new UInt32[45402] do
       expect(subject).to eq Bytes[90, 177, 0, 0]
     end
   end
 
-  describe "#decode_u32_list" do
-    subject { KVAction.decode_u32_list input }
+  describe "#decode_u32_set" do
+    subject { KVAction.decode_u32_set input }
 
     provided input: Bytes[0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0] do
-      expect(subject).to eq UInt32[0, 2, 3]
+      expect(subject).to eq Set.new UInt32[0, 2, 3]
     end
 
     provided input: Bytes[90, 177, 0, 0] do
-      expect(subject).to eq UInt32[45402]
+      expect(subject).to eq Set.new UInt32[45402]
     end
   end
 
@@ -79,8 +79,8 @@ Spectator.describe Store::KVAction do
 
     it "term to iids" do
       expect( action.get_term_to_iids(1)).to eq nil
-      expect( action.set_term_to_iids(1_u32, UInt32[0, 1, 2])).to eq nil
-      expect( action.get_term_to_iids(1)).to eq UInt32[0, 1, 2]
+      expect( action.set_term_to_iids(1_u32, Set.new UInt32[0, 1, 2])).to eq nil
+      expect( action.get_term_to_iids(1)).to eq Set.new UInt32[0, 1, 2]
       expect( action.delete_term_to_iids(1)).to eq nil
       expect( action.get_term_to_iids(1)).to eq nil
     end
@@ -103,8 +103,8 @@ Spectator.describe Store::KVAction do
 
     it "iid to terms" do
       expect( action.get_iid_to_terms(4_u32)).to eq nil
-      expect( action.set_iid_to_terms(4_u32, [45402_u32])).to eq nil
-      expect( action.get_iid_to_terms(4_u32)).to eq UInt32[45402]
+      expect( action.set_iid_to_terms(4_u32, Set.new [45402_u32])).to eq nil
+      expect( action.get_iid_to_terms(4_u32)).to eq Set.new UInt32[45402]
       expect( action.delete_iid_to_terms(4_u32)).to eq nil
       expect( action.get_iid_to_terms(4_u32)).to eq nil
     end

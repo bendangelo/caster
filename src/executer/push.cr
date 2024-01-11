@@ -45,23 +45,21 @@ module Executer
       has_commits = false
       iid_terms_hashed = kv_action.get_iid_to_terms(iid)
       if iid_terms_hashed.nil?
-        iid_terms_hashed = [] of UInt32
+        iid_terms_hashed = Set(UInt32).new
       end
 
       Log.info { "got push executor stored iid-to-terms: #{iid_terms_hashed}" }
 
       token.each do |term, term_hashed|
-        if !iid_terms_hashed.includes?(term_hashed)
+        if iid_terms_hashed.add?(term_hashed)
           term_iids = kv_action.get_term_to_iids(term_hashed)
-          term_iids = term_iids.nil? ? [] of UInt32 : term_iids
+          term_iids = term_iids.nil? ? Set(UInt32).new : term_iids
 
           has_commits = true
 
-          next if term_iids.includes?(iid)
+          next if !term_iids.add?(iid)
 
           Log.info { "has push executor term-to-iids: #{iid}" }
-
-          term_iids.unshift(iid)
 
           # truncate_limit = APP_CONF.store.kv.retain_word_objects
           #
@@ -73,7 +71,6 @@ module Executer
 
           kv_action.set_term_to_iids(term_hashed, term_iids)
 
-          iid_terms_hashed.push term_hashed
         end
 
         # if fst_action.push_word(term)

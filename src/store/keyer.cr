@@ -38,7 +38,7 @@ module Store
     def to_s(io : IO)
       key_bucket = @key[1, 4].hexstring
       key_route = @key[5, 4].hexstring
-      io << "'#{@key[0]}:#{key_bucket}:#{key_route}' #{@key}"
+      io << @key[0] << ":" << key_bucket << ":" << key_route << " " << @key
     end
 
     def self.meta_to_value(bucket : String, meta : UInt32) : Keyer

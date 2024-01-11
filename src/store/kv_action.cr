@@ -59,7 +59,7 @@ module Store
           if value = store.get?(store_key.as_bytes)
             Log.debug { "got term-to-iids: #{store_key} with encoded value: #{value}" }
 
-            decoded_iids = KVAction.decode_u32_list(value)
+            decoded_iids = KVAction.decode_u32_set(value)
 
             if decoded_iids
               Log.debug { "got term-to-iids: #{store_key} with decoded value: #{decoded_iids}" }
@@ -76,13 +76,13 @@ module Store
         end
       end
 
-      def set_term_to_iids(term_hashed : TermHash, iids : Array(UInt32))
+      def set_term_to_iids(term_hashed : TermHash, iids : Set(UInt32))
         if store
           store_key = Keyer.term_to_iids(@bucket, term_hashed)
 
           Log.debug { "store set term-to-iids: #{store_key}" }
 
-          iids_encoded = KVAction.encode_u32_list(iids)
+          iids_encoded = KVAction.encode_u32_set(iids)
 
           Log.debug { "store set term-to-iids: #{store_key} with encoded value: #{iids_encoded}" }
 
@@ -217,7 +217,7 @@ module Store
           Log.debug { "store get iid-to-terms: #{store_key}" }
 
           if value = store.get?(store_key.as_bytes)
-            decoded_value = KVAction.decode_u32_list(value)
+            decoded_value = KVAction.decode_u32_set(value)
 
             Log.debug { "got iid-to-terms: #{store_key} with decoded value: #{decoded_value}" }
             decoded_value
@@ -229,13 +229,13 @@ module Store
         end
       end
 
-      def set_iid_to_terms(iid : UInt32, terms_hashed : Array(UInt32))
+      def set_iid_to_terms(iid : UInt32, terms_hashed : Set(UInt32))
         if store
           store_key = Keyer.iid_to_terms(@bucket, iid)
 
           Log.debug { "store set iid-to-terms: #{store_key}" }
 
-          terms_hashed_encoded = KVAction.encode_u32_list(terms_hashed)
+          terms_hashed_encoded = KVAction.encode_u32_set(terms_hashed)
 
           Log.debug { "store set iid-to-terms: #{store_key} with encoded value: #{terms_hashed_encoded}" }
 
@@ -390,7 +390,7 @@ module Store
       IO::ByteFormat::LittleEndian.decode(UInt32, encoded)
     end
 
-    def self.encode_u32_list(decoded : Array(UInt32)) : Bytes
+    def self.encode_u32_set(decoded : Set(UInt32)) : Bytes
       io = IO::Memory.new(decoded.size * 4)
 
       decoded.each do |decoded_item|
@@ -400,8 +400,8 @@ module Store
       io.to_slice
     end
 
-    def self.decode_u32_list(encoded : Bytes)
-      decoded = Array(UInt32).new(encoded.size)
+    def self.decode_u32_set(encoded : Bytes)
+      decoded = Set(UInt32).new(encoded.size)
 
       encoded.each_with_index do |byte, i|
         if i % 4 == 0
