@@ -28,6 +28,9 @@ dependencies:
     github: ysbaddaden/pool
     branch: main
 
+  multiset:
+    github: tcrouch/multiset.cr
+
 development_dependencies:
   spectator:
     gitlab: arctic-fox/spectator

@@ -219,13 +219,8 @@ module Store
           if value = store.get?(store_key.as_bytes)
             decoded_value = KVAction.decode_u32_list(value)
 
-            if decoded_value
-              Log.debug { "got iid-to-terms: #{store_key} with decoded value: #{decoded_value}" }
-              terms = decoded_value.map { |term| TermHash.new(term) }
-              terms
-            else
-              nil
-            end
+            Log.debug { "got iid-to-terms: #{store_key} with decoded value: #{decoded_value}" }
+            decoded_value
           else
             nil
           end

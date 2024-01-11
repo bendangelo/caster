@@ -40,59 +40,54 @@ module Executer
         iid_incr
       end
 
-      # if iid.not_nil?
-      #   has_commits = false
-      #   iid_terms_hashed = LinkedHashSet(StoreTermHashed).new(
-      #     kv_action.get_iid_to_terms(iid).unwrap_or(nil).unwrap_or(LinkedHashSet(StoreTermHashed).new)
-      #   )
-      #
-      #   Log.info { "got push executor stored iid-to-terms: #{iid_terms_hashed}" }
-      #
-      #   token.each do |term, term_hashed|
-      #     if !iid_terms_hashed.include?(term_hashed)
-      #       if let Ok(term_iids) = kv_action.get_term_to_iids(term_hashed)
-      #         has_commits = true
-      #
-      #         term_iids = term_iids.nil? ? [] : term_iids
-      #
-      #         if term_iids.include?(iid)
-      #           term_iids.delete(iid)
-      #         end
-      #
-      #         Log.info { "has push executor term-to-iids: #{iid}" }
-      #
-      #         term_iids.unshift(iid)
-      #
-      #         # truncate_limit = APP_CONF.store.kv.retain_word_objects
-      #         #
-      #         # if term_iids.size > truncate_limit
-      #         #   Log.info { "push executor term-to-iids object too long (limit: #{truncate_limit})" }
-      #         #   term_iids_drain = term_iids.pop(truncate_limit)
-      #         #   executor_ensure_op!(kv_action.batch_truncate_object(term_hashed, term_iids_drain))
-      #         # end
-      #
-      #         executor_ensure_op!(kv_action.set_term_to_iids(term_hashed, term_iids))
-      #
-      #         iid_terms_hashed << term_hashed
-      #       else
-      #         Log.error { "failed getting push executor term-to-iids" }
-      #       end
-      #     end
-      #
-      #     # if fst_action.push_word(term)
-      #     #   Log.debug { "push term committed to graph: #{term}" }
-      #     # end
-      #   end
-      #
-      #   if has_commits
-      #     collected_iids = iid_terms_hashed.to_a
-      #
-      #     Log.info { "has push executor iid-to-terms commits: #{collected_iids}" }
-      #
-      #     executor_ensure_op!(kv_action.set_iid_to_terms(iid, collected_iids))
-      #   end
-      #
-      # end
+      return if iid.nil?
+
+      has_commits = false
+      iid_terms_hashed = kv_action.get_iid_to_terms(iid)
+      if iid_terms_hashed.nil?
+        iid_terms_hashed = [] of UInt32
+      end
+
+      Log.info { "got push executor stored iid-to-terms: #{iid_terms_hashed}" }
+
+      token.each do |term, term_hashed|
+        if !iid_terms_hashed.includes?(term_hashed)
+          term_iids = kv_action.get_term_to_iids(term_hashed)
+          term_iids = term_iids.nil? ? [] of UInt32 : term_iids
+
+          has_commits = true
+
+          next if term_iids.includes?(iid)
+
+          Log.info { "has push executor term-to-iids: #{iid}" }
+
+          term_iids.unshift(iid)
+
+          # truncate_limit = APP_CONF.store.kv.retain_word_objects
+          #
+          # if term_iids.size > truncate_limit
+          #   Log.info { "push executor term-to-iids object too long (limit: #{truncate_limit})" }
+          #   term_iids_drain = term_iids.pop(truncate_limit)
+          #   executor_ensure_op!(kv_action.batch_truncate_object(term_hashed, term_iids_drain))
+          # end
+
+          kv_action.set_term_to_iids(term_hashed, term_iids)
+
+          iid_terms_hashed.push term_hashed
+        end
+
+        # if fst_action.push_word(term)
+        #   Log.debug { "push term committed to graph: #{term}" }
+        # end
+      end
+
+      if has_commits
+
+        Log.info { "has push executor iid-to-terms commits: #{iid_terms_hashed}" }
+
+        kv_action.set_iid_to_terms(iid, iid_terms_hashed)
+      end
+
     end
 
   end

@@ -88,19 +88,25 @@ Spectator.describe Store::KVAction do
     it "oid to iid" do
       expect( action.get_oid_to_iid("s")).to eq nil
       expect( action.set_oid_to_iid("s", 4)).to eq nil
+      expect( action.get_oid_to_iid("s")).to eq 4
       expect( action.delete_oid_to_iid("s")).to eq nil
+      expect( action.get_oid_to_iid("s")).to eq nil
     end
 
     it "iid to oid" do
       expect( action.get_iid_to_oid(4)).to eq nil
       expect( action.set_iid_to_oid(4, "s")).to eq nil
+      expect( action.get_iid_to_oid(4)).to eq "s"
       expect( action.delete_iid_to_oid(4)).to eq nil
+      expect( action.get_iid_to_oid(4)).to eq nil
     end
 
     it "iid to terms" do
       expect( action.get_iid_to_terms(4_u32)).to eq nil
       expect( action.set_iid_to_terms(4_u32, [45402_u32])).to eq nil
+      expect( action.get_iid_to_terms(4_u32)).to eq UInt32[45402]
       expect( action.delete_iid_to_terms(4_u32)).to eq nil
+      expect( action.get_iid_to_terms(4_u32)).to eq nil
     end
   end
 end
