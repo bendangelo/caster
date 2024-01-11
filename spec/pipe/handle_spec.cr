@@ -28,15 +28,32 @@ Spectator.describe Pipe::Handle do
       subject { Handle.ensure_start(double :tcpsocket, gets: gets_input) }
 
       provided gets_input: "START search" do
+        expect(Caster.settings.auth_password).to eq "hello"
         expect(subject).to eq ResultError::AuthenticationFailed
       end
 
       provided gets_input: "START search sdsd" do
+        expect(Caster.settings.auth_password).to eq "hello"
         expect(subject).to eq ResultError::AuthenticationFailed
       end
 
       provided gets_input: "START search hello" do
+        expect(Caster.settings.auth_password).to eq "hello"
         expect(subject).to eq Mode::Search
+      end
+
+      context "with password from env" do
+
+        before_each do
+          ENV["CASTER_PASSWORD"] = "testing"
+          Caster.settings.auth_password = ""
+          Caster::Settings.load_from_env!
+        end
+
+        provided gets_input: "START search testing" do
+          expect(Caster.settings.auth_password).to eq "testing"
+          expect(subject).to eq Mode::Search
+        end
       end
 
     end
@@ -89,7 +106,7 @@ Spectator.describe Pipe::Handle do
   describe ".handle_stream" do
 
     # short for testing
-    let(max_line_size) { 10 }
+    let(max_line_size) { 50 }
     let(run_loop) { false }
 
     # TODO: test having multiple messages in one gets
@@ -110,6 +127,28 @@ Spectator.describe Pipe::Handle do
 
       it "pongs without extra space" do
         expect(tcpsocket).to receive(:puts).with("PONG#{Handle::LINE_FEED}")
+
+        Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
+      end
+    end
+
+    context "QUERY sent" do
+
+      double :tcpsocket, gets_input: %[QUERY messages user:1 "hello"\n], puts: nil do
+          stub def read(buffer)
+            slice = gets_input.to_unsafe.to_slice(gets_input.size)
+
+            slice.copy_to buffer
+
+            gets_input.size
+          end
+      end
+
+      let(tcpsocket) { double(:tcpsocket) }
+
+      it "returns pending and then event" do
+        expect(tcpsocket).to receive(:puts).with(/PENDING [A-za-z=0-9+\-]+#{Handle::LINE_FEED}/)
+        expect(tcpsocket).to receive(:puts).with(/EVENT QUERY [A-za-z=0-9+\-]+#{Handle::LINE_FEED}/)
 
         Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
       end

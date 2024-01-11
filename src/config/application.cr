@@ -27,11 +27,13 @@ module Caster
 
   def self.boot
     Caster::Logger.setup
+    Caster::Settings.load_from_env!
   end
 
   def self.start
     boot
 
+    Log.info { "=== Welcome to CASTER ===" }
     Log.info { "Starting up!" }
 
     # db = RocksDB::DB.new(settings.yaml_unmapped["kv"]["path"].to_s)

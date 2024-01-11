@@ -8,7 +8,7 @@ module Pipe
   class Message
     COMMAND_ELAPSED_MILLIS_SLOW_WARN = 50_u128
 
-    def self.handle_mode(mode : Mode, message : String) : CommandResult
+    def self.handle_mode(mode : Mode, message : String)
       command, parts = extract message
 
       case command
@@ -33,10 +33,10 @@ module Pipe
 
     def self.search_mode(command, parts)
       case command
-      # when "QUERY"
-      #   SearchCommand.dispatch_query parts
-        # when "SUGGEST"
-        #   return SearchCommand.dispatch_suggest parts
+      when "QUERY"
+        SearchCommand.dispatch_query parts
+      # when "SUGGEST"
+      #   SearchCommand.dispatch_suggest parts
         # when "LIST"
         #   return SearchCommand.dispatch_list parts
         # when "HELP"
@@ -103,11 +103,17 @@ module Pipe
       # end
 
       # Serve response messages on socket
-      # response_args_groups.each do |response_args|
-      puts_message stream, result.type, result.value
+      if result.is_a? Tuple
+        result.each do |args|
+          puts_message stream, args.type, args.value
 
-      continue_pipe = MessageResult::Close if result.type == ResponseType::Ended
-      # end
+          continue_pipe = MessageResult::Close if args.type == ResponseType::Ended
+        end
+      else
+        puts_message stream, result.type, result.value
+
+        continue_pipe = MessageResult::Close if result.type == ResponseType::Ended
+      end
 
       # Measure and log time it took to execute command
       # Notice: this is critical as to raise developer awareness on the performance bits when \
@@ -141,7 +147,7 @@ module Pipe
     end
 
     def self.puts_message(stream, response_type, response_values)
-      if response_values.nil?
+      if response_values.blank?
         message = "#{response_type.to_s.upcase}#{Handle::LINE_FEED}"
       else
         message = "#{response_type.to_s.upcase} #{response_values}#{Handle::LINE_FEED}"

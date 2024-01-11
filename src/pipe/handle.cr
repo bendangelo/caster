@@ -142,7 +142,7 @@ module Pipe
 
         parts = read.split(" ")
 
-        if parts.size >= 2 && parts.first.to_s.upcase == "START"
+        if parts.size >= 2 && parts.first.upcase == "START"
           if res_mode = parts[1]
             Log.debug {"got mode response: #{res_mode}"}
 

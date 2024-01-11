@@ -4,7 +4,7 @@ colorize: true
 inet: "localhost"
 port: 1491
 tcp_timeout: 300
-  #auth_password: "SecretPassword"
+#auth_password: "SecretPassword"
 
 search:
   query_limit_default: 10

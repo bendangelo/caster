@@ -2,6 +2,13 @@ module Caster
   class Settings
     include YAML::Serializable
 
+    def self.load_from_env!
+      if env_pass = ENV["CASTER_PASSWORD"]?
+        Caster.settings.auth_password = env_pass
+        Log.debug { "Password set from env var" }
+      end
+    end
+
     property log_level : Int32
     property colorize : Bool
 

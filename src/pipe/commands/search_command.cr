@@ -1,56 +1,54 @@
 module Pipe
   class SearchCommand
-    # def self.dispatch_query(parts : Slice(String)) : CommandResult
-    #   collection, bucket, text = parts.shift?, parts.shift?, ChannelCommandBase.parse_text_parts(parts)
-    #
-    #   if collection && bucket && text
-    #     # Generate command identifier
-    #     event_id = ChannelCommandBase.generate_event_id
-    #
-    #     puts "dispatching search query ##{event_id} on collection: #{collection} and bucket: #{bucket}"
-    #
-    #     # Define query parameters
-    #     query_limit = APP_CONF.channel.search.query_limit_default
-    #     query_offset = 0
-    #     query_lang = nil
-    #
-    #     # Parse meta parts (meta comes after text; extract meta parts second)
-    #     last_meta_err = nil
-    #
-    #     while (meta_result = ChannelCommandBase.parse_next_meta_parts(parts))
-    #       case handle_query_meta(meta_result)
-    #       when Ok([Some(query_limit_parsed), Nil, Nil])
-    #         query_limit = query_limit_parsed
-    #       when Ok([Nil, Some(query_offset_parsed), Nil])
-    #         query_offset = query_offset_parsed
-    #       when Ok([Nil, Nil, Some(query_lang_parsed)])
-    #         query_lang = query_lang_parsed
-    #       when Err(parse_err)
-    #         last_meta_err = parse_err
-    #       end
-    #     end
-    #
-    #     if last_meta_err
-    #       return Err(last_meta_err)
-    #     elsif query_limit < 1 || query_limit > APP_CONF.channel.search.query_limit_maximum
-    #       return Err(PipeCommandError::PolicyReject.new("LIMIT out of minimum/maximum bounds"))
-    #     else
-    #       puts "will search for ##{event_id} with text: #{text}, limit: #{query_limit}, offset: #{query_offset}, locale: <#{query_lang}>"
-    #
-    #       # Commit 'search' query
-    #       ChannelCommandBase.commit_pending_operation(
-    #         "QUERY", event_id, QueryBuilder.search(
-    #           event_id, collection, bucket, text, query_limit, query_offset, query_lang
-    #         )
-    #       )
-    #     end
-    #   else
-    #     return Err(PipeCommandError::InvalidFormat.new(
-    #       "QUERY <collection> <bucket> \"<terms>\" [LIMIT(<count>)]? [OFFSET(<count>)]? [LANG(<locale>)]?"
-    #     ))
-    #   end
-    # end
-    #
+    def self.dispatch_query(parts)
+      collection, bucket, text = parts.shift?, parts.shift?, BaseCommand.parse_text_parts(parts)
+
+      if collection && bucket && text
+        # Generate command identifier
+        event_id = BaseCommand.generate_event_id
+
+        Log.info { "dispatching search query ##{event_id} on collection: #{collection} and bucket: #{bucket}" }
+
+        # Define query parameters
+        query_limit = Caster.settings.search.query_limit_default
+        query_offset = 0
+        query_lang = nil
+
+        # Parse meta parts (meta comes after text; extract meta parts second)
+        last_meta_err = nil
+
+        # while (meta_result = BaseCommand.parse_next_meta_parts(parts))
+        #   case handle_query_meta(meta_result)
+        #   when Ok([Some(query_limit_parsed), Nil, Nil])
+        #     query_limit = query_limit_parsed
+        #   when Ok([Nil, Some(query_offset_parsed), Nil])
+        #     query_offset = query_offset_parsed
+        #   when Ok([Nil, Nil, Some(query_lang_parsed)])
+        #     query_lang = query_lang_parsed
+        #   when Err(parse_err)
+        #     last_meta_err = parse_err
+        #   end
+        # end
+
+        if last_meta_err
+          return CommandResult.error CommandError::InvalidMetaKey, last_meta_err
+        elsif query_limit < 1 || query_limit > Caster.settings.search.query_limit_maximum
+          return CommandResult.error CommandError::PolicyReject, "LIMIT out of minimum/maximum bounds"
+        else
+          Log.info { "will search for ##{event_id} with text: #{text}, limit: #{query_limit}, offset: #{query_offset}, locale: <#{query_lang}>" }
+
+          # Commit 'search' query
+          BaseCommand.commit_pending_operation(
+            "QUERY", event_id, Query::Builder.search(
+              event_id, collection, bucket, text, query_limit, query_offset, query_lang
+            )
+          )
+        end
+      else
+        return CommandResult.error CommandError::InvalidFormat, "QUERY <collection> <bucket> \"<terms>\" [LIMIT(<count>)]? [OFFSET(<count>)]? [LANG(<locale>)]?"
+      end
+    end
+
     # def self.dispatch_suggest(parts : Slice(String)) : CommandResult
     #   collection, bucket, text = parts.shift?, parts.shift?, ChannelCommandBase.parse_text_parts(parts)
     #
