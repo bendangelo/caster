@@ -24,6 +24,10 @@ dependencies:
     github: bendangelo/dispatch
     branch: upgraded
 
+  optarg:
+    git: https://github.com/amberframework/optarg.git
+    branch: master
+
 development_dependencies:
   spectator:
     gitlab: arctic-fox/spectator

@@ -23,12 +23,30 @@ require "../query/*"
 module Caster
 
   def self.settings
-    @@settings ||= Settings.from_yaml File.read "./src/config/settings.yml"
+    @@settings ||= Settings.from_yaml File.read Caster::Settings.settings_path
   end
 
   def self.boot
     Caster::Logger.setup
     Caster::Settings.load_from_env!
+  end
+
+  def self.shutdown
+    Log.info {"stopping gracefully"}
+
+    # Teardown Pipe
+    Pipe::Listen.teardown
+
+    # Perform a KV flush (ensures all in-memory changes are synced on-disk before shutdown)
+    # Store::KVPool.flush(true)
+
+    # Perform a FST consolidation (ensures all in-memory items are synced on-disk before
+    #   shutdown; otherwise we would lose all non-consolidated FST changes)
+    # StoreFSTPool.consolidate(true)
+
+    sleep 1
+    Log.info { "stopped" }
+    exit
   end
 
   def self.start
@@ -37,28 +55,14 @@ module Caster
     Log.info { "=== Welcome to CASTER ===" }
     Log.info { "Starting up!" }
 
-    # db = RocksDB::DB.new(settings.yaml_unmapped["kv"]["path"].to_s)
-
     # Spawn tasker (background thread)
     # spawn_tasker
 
     Log.info { "started" }
 
-    Signal::HUP.trap do |signal|
-      Log.info {"stopping gracefully (got signal: #{signal})"}
-
-      # Teardown Pipe
-      Pipe::Listen.teardown
-
-      # Perform a KV flush (ensures all in-memory changes are synced on-disk before shutdown)
-      # Store::KVPool.flush(true)
-
-      # Perform a FST consolidation (ensures all in-memory items are synced on-disk before
-      #   shutdown; otherwise we would lose all non-consolidated FST changes)
-      # StoreFSTPool.consolidate(true)
-
-      Log.info { "stopped" }
-    end
+    Signal::TERM.trap { shutdown }
+    Signal::INT.trap { shutdown }
+    Signal::HUP.trap { shutdown }
 
     # Spawn pipe (foreground thread)
     Pipe::Listen.run

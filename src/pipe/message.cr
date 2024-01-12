@@ -9,7 +9,7 @@ module Pipe
     COMMAND_ELAPSED_MILLIS_SLOW_WARN = 50_u128
 
     def self.handle_mode(mode : Mode, message : String)
-      command, parts = extract message
+      command, args = extract message
 
       case command.byte_at?(0)
       when 'P'.ord # ping
@@ -19,11 +19,11 @@ module Pipe
       else
         case mode
         when Mode::Search
-          search_mode command, parts
+          search_mode command, args
         when Mode::Ingest
-          ingest_mode command, parts
+          ingest_mode command, args
         when Mode::Control
-          control_mode command, parts
+          control_mode command, args
         else
           CommandResult.new ResponseType::Void, "unhandled command"
         end
@@ -31,58 +31,58 @@ module Pipe
 
     end
 
-    def self.search_mode(command, parts)
+    def self.search_mode(command, args)
       case command.byte_at?(0)
       when 'Q'.ord # query
-        SearchCommand.dispatch_query parts
+        SearchCommand.dispatch_query args
       when 'S'.ord # suggest
-        SearchCommand.dispatch_suggest parts
+        SearchCommand.dispatch_suggest args
       when 'L'.ord # list
-        return SearchCommand.dispatch_list parts
+        return SearchCommand.dispatch_list args
         # when "H" # help
-        #   return SearchCommand.dispatch_help parts
+        #   return SearchCommand.dispatch_help args
       else
         CommandResult.new ResponseType::Void, "command not found"
       end
     end
 
-    def self.ingest_mode(command, parts)
+    def self.ingest_mode(command, args)
       case command
       when "PUSH" # upsert
-        IngestCommand.dispatch_push parts
+        IngestCommand.dispatch_push args
       when "POP"
-        IngestCommand.dispatch_pop parts
+        IngestCommand.dispatch_pop args
       when "COUNT"
-        IngestCommand.dispatch_count parts
+        IngestCommand.dispatch_count args
       when "FLUSHC"
-        IngestCommand.dispatch_flushc parts
+        IngestCommand.dispatch_flushc args
       when "FLUSHB"
-        IngestCommand.dispatch_flushb parts
+        IngestCommand.dispatch_flushb args
       when "FLUSHO"
-        IngestCommand.dispatch_flusho parts
+        IngestCommand.dispatch_flusho args
         # when "HELP"
-        #   return SearchCommand.dispatch_list parts
+        #   return SearchCommand.dispatch_list args
       else
         CommandResult.new ResponseType::Void, "command not found"
       end
     end
 
-    def self.control_mode(command, parts)
+    def self.control_mode(command, args)
       case command
         when "TRIGGER"
-          ControlCommand.dispatch_trigger parts
+          ControlCommand.dispatch_trigger args
         when "INFO"
-          ControlCommand.dispatch_info parts
+          ControlCommand.dispatch_info args
         when "COUNT"
-          IngestCommand.dispatch_count parts
+          IngestCommand.dispatch_count args
         when "FLUSHC"
-          IngestCommand.dispatch_flushc parts
+          IngestCommand.dispatch_flushc args
         when "FLUSHB"
-          IngestCommand.dispatch_flushb parts
+          IngestCommand.dispatch_flushb args
         when "FLUSHO"
-          IngestCommand.dispatch_flusho parts
+          IngestCommand.dispatch_flusho args
         # when "HELP"
-        #   return SearchCommand.dispatch_list parts
+        #   return SearchCommand.dispatch_list args
       else
         CommandResult.new ResponseType::Void, "command not found"
       end
@@ -94,13 +94,12 @@ module Pipe
 
       Log.debug { "got pipe message: (#{message})" }
 
-      # TODO: handle shutting down
-      # if !CHANNEL_AVAILABLE.read
-      #   # Server going down, reject command
-      #   response_args_groups = [CommandResponse::Err(CommandError::ShuttingDown).to_args]
-      # else
-      result = handle_mode mode, message
-      # end
+      if Listen.available?
+        result = handle_mode mode, message
+      else
+        # Server going down, reject command
+        result = CommandResult.new ResponseType::Ended, value: "shutting down"
+      end
 
       # Serve response messages on socket
       if result.is_a? Tuple
@@ -158,14 +157,18 @@ module Pipe
       Log.debug { "wrote response with values: (#{message})" }
     end
 
-    def self.extract(message : String) : {String, Array(String)}
+    def self.extract(message : String) : {String, String}
       # Extract command name and arguments
-      parts = message.split " "
-      command = parts.shift
+      parts = message.partition " "
+      args = parts[2]?
 
-      Log.debug { "will dispatch search command: (#{command})" }
+      if args.nil? || args.blank?
+        args = ""
+      end
 
-      {command, parts}
+      Log.debug { "will dispatch command: (#{parts[0]}) args: (#{args})" }
+
+      return parts[0], args
     end
 
   end

@@ -1,9 +1,11 @@
 module Pipe
   class Listen
-    # CHANNEL_AVAILABLE : RWLock(Bool) = RWLock.new(true)
+    PIPE_AVAILABLE = Atomic.new(1)
 
     def self.run
       Log.info { "listening on tcp://#{Caster.settings.inet}:#{Caster.settings.port}" }
+
+      PIPE_AVAILABLE.set(1)
 
       server = TCPServer.new(Caster.settings.inet, Caster.settings.port)
       while client = server.accept?
@@ -17,9 +19,13 @@ module Pipe
       Handle.client(stream)
     end
 
+    def self.available?
+      PIPE_AVAILABLE.get == 1
+    end
+
     def self.teardown
       # Channel cannot be used anymore
-      # CHANNEL_AVAILABLE.write { |lock| lock[] = false }
+      PIPE_AVAILABLE.set(0)
     end
   end
 end

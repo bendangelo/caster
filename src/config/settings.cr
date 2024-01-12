@@ -9,6 +9,14 @@ module Caster
       end
     end
 
+    def self.settings_path
+      if config = ENV["CASTER_CONFIG"]?
+        config
+      else
+        "./src/config/settings.yml"
+      end
+    end
+
     property log_level : Int32
     property colorize : Bool
 

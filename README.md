@@ -23,6 +23,13 @@ shards build --release
 ./sentry -r "crystal" --run-args "spec --debug" -w "./spec/**/*" -w "./src/**/*" 
 ```
 
+## Deployment
+
+```
+ENV["CASTER_CONFIG"] = ./path/settings.yml
+ENV["CASTER_PASSWORD"] = password
+```
+
 ## Contributing
 
 1. Fork it (<https://github.com/your-github-user/caster/fork>)

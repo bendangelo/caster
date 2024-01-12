@@ -1,6 +1,9 @@
 module Pipe
   class ControlCommand
-    def self.dispatch_trigger(parts) : CommandResult
+    def self.dispatch_trigger(input) : CommandResult
+      parts = BaseCommand.parse_args(input)
+      collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
+
       return CommandResult.error CommandError::InvalidFormat
       # case [parts.shift?, parts.shift?, parts.shift?]
       # when [nil, _, _]
@@ -55,7 +58,9 @@ module Pipe
       # end
     end
 
-    def self.dispatch_info(parts) : CommandResult
+    def self.dispatch_info(input) : CommandResult
+      parts = BaseCommand.parse_args(input)
+
       case parts.shift?
       when nil
         # statistics = ChannelStatistics.gather

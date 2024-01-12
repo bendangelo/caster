@@ -1,43 +1,35 @@
 module Pipe
   class IngestCommand
 
-    def self.dispatch_push(parts) : CommandResult
-      collection, bucket, object, text = parts.shift?, parts.shift?, parts.shift?, BaseCommand.parse_text_parts(parts)
+    def self.dispatch_push(input : String) : CommandResult
+      parts, text = BaseCommand.parse_args_with_text(input)
+      collection, bucket, object = parts.shift?, parts.shift?, parts.shift?
 
       if collection && bucket && object && text
         Log.info { "dispatching ingest push in collection: #{collection}, bucket: #{bucket} and object: #{object} with text (#{text})" }
 
         # Define push parameters
-        push_lang = nil
 
-        # # Parse meta parts (meta comes after text; extract meta parts second)
-        last_meta_err = nil
+        # Parse meta parts (meta comes after text; extract meta parts second)
+        push_lang = BaseCommand.parse_meta parts, "LANG"
 
-        # while (meta_result = BaseCommand.parse_next_meta_parts(parts))
-        #   case handle_push_meta(meta_result)
-        #   when Ok(Some(push_lang_parsed))
-        #     push_lang = push_lang_parsed
-        #   when Err(parse_err)
-        #     last_meta_err = parse_err
-        #   end
-        # end
-
-        if last_meta_err
-          return CommandResult.error CommandError::InvalidFormat, last_meta_err
+        if text.blank?
+          CommandResult.error CommandError::InvalidFormat, "text is blank"
         else
           Log.info { "will push for text: #{text} with hinted locale: #{push_lang}" }
 
           # Commit 'push' query
-            BaseCommand.commit_ok_operation Query::Builder.push(collection, bucket, object, text, push_lang)
-
+          BaseCommand.commit_ok_operation Query::Builder.push(collection, bucket, object, text, push_lang)
         end
       else
-        CommandResult.error CommandError::InvalidFormat, "PUSH <collection> <bucket> <object> \"<text>\" [LANG(<locale>)]?"
+        CommandResult.error CommandError::InvalidFormat, "PUSH <collection> <bucket> <object> [LANG value]? -- <text>"
       end
     end
 
-    def self.dispatch_pop(parts) : CommandResult
-      collection, bucket, object, text, _ = parts.shift?, parts.shift?, parts.shift?, BaseCommand.parse_text_parts(parts), parts.shift?
+    def self.dispatch_pop(input) : CommandResult
+      parts, text = BaseCommand.parse_args_with_text(input)
+      collection, bucket, object = parts.shift?, parts.shift?, parts.shift?
+
       #
       # if collection && bucket && object && text && !_
       #   Log.info { "dispatching ingest pop in collection: #{collection}, bucket: #{bucket} and object: #{object}" }
@@ -48,26 +40,28 @@ module Pipe
       #     Query::Builder.pop(collection, bucket, object, text)
       #   )
       # else
-      return CommandResult.error CommandError::InvalidFormat, "POP <collection> <bucket> <object> \"<text>\""
+      return CommandResult.error CommandError::InvalidFormat, "POP <collection> <bucket> <object> -- <text>"
       # end
     end
 
-    def self.dispatch_count(parts) : CommandResult
-      collection, bucket_part, object_part, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
+    def self.dispatch_count(input) : CommandResult
+      parts = BaseCommand.parse_args(input)
+      collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
 
-      if collection && !bucket_part && !object_part && !extra
+      if collection && !bucket && !object && !extra
         Log.info { "dispatching ingest count in collection: #{collection}" }
 
         # Make 'count' query
         BaseCommand.commit_result_operation(
-          Query::Builder.count(collection, bucket_part, object_part)
+          Query::Builder.count(collection, bucket, object)
         )
       else
         return CommandResult.error CommandError::InvalidFormat, "COUNT <collection> [<bucket> [<object>]?]?"
       end
     end
 
-    def self.dispatch_flushc(parts) : CommandResult
+    def self.dispatch_flushc(input) : CommandResult
+      parts = BaseCommand.parse_args(input)
       collection, extra = parts.shift?, parts.shift?
 
       if collection && !extra
@@ -82,7 +76,8 @@ module Pipe
       end
     end
 
-    def self.dispatch_flushb(parts) : CommandResult
+    def self.dispatch_flushb(input) : CommandResult
+      parts = BaseCommand.parse_args(input)
       collection, bucket, extra = parts.shift?, parts.shift?, parts.shift?
 
       if collection && bucket && !extra
@@ -97,7 +92,8 @@ module Pipe
       end
     end
 
-    def self.dispatch_flusho(parts) : CommandResult
+    def self.dispatch_flusho(input) : CommandResult
+      parts = BaseCommand.parse_args(input)
       collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
 
       if collection && bucket && object && !extra

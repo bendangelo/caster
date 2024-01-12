@@ -3,33 +3,53 @@ require "../../spec_helper"
 Spectator.describe Pipe::BaseCommand do
   include Pipe
 
-  describe ".parse_text_parts" do
+  describe ".parse_args_with_text" do
 
-    subject(command) { Pipe::BaseCommand.parse_text_parts parts }
+    subject(command) { Pipe::BaseCommand.parse_args_with_text input }
 
-    provided parts: [%["hey], "bucket", "object", %[\"text"]] do
-      expect(command).to eq %[hey bucket object "text]
+    provided input: "collection -- my text here" do
+      expect(command).to eq({["collection"], "my text here"})
     end
 
-    provided parts: [%["hey], "bucket", "object", %[\"text"], "meta data"] do
-      expect(command).to eq %[hey bucket object "text]
+    provided input: "collection bucket LANG eng -- \"hey this is -- cool \\n" do
+      expect(command).to eq({["collection", "bucket", "LANG", "eng"], "\"hey this is -- cool \n"})
     end
 
-    provided parts: [%[hey], %[text"]] do
-      expect(command).to eq nil
+    provided input: "collection bucket -- " do
+      expect(command).to eq({["collection", "bucket"], ""})
     end
 
-    provided parts: [%["], %["]] do
-      expect(command).to eq nil
+    provided input: "" do
+      expect(command).to eq({[""], ""})
     end
 
   end
 
-  describe ".parse_next_meta_parts" do
+  describe ".parse_args" do
 
-    # subject(ingest) { Pipe::IngestCommand.dispatch_push parts }
-    #
-    # provided parts: ["collection", "bucket", "object", %["text"]] do
-    # end
+    subject(command) { Pipe::BaseCommand.parse_args input }
+
+    provided input: "collection here" do
+      expect(command).to eq ["collection", "here"]
+    end
+
+  end
+
+  describe ".parse_meta" do
+
+    subject(command) { Pipe::BaseCommand.parse_meta input, key }
+
+    provided input: ["LANG", "eng"], key: "LANG" do
+      expect(command).to eq "eng"
+    end
+
+    provided input: ["OFF"], key: "OFF" do
+      expect(command).to eq nil
+    end
+
+    provided input: [""], key: "OFF" do
+      expect(command).to eq nil
+    end
+
   end
 end
