@@ -167,8 +167,8 @@ Spectator.describe Pipe::Handle do
       let(tcpsocket) { double(:tcpsocket) }
 
       it "returns pending and then event" do
-        expect(tcpsocket).to receive(:puts).with(/PENDING [A-za-z=0-9+\-]+#{Handle::LINE_FEED}/)
-        expect(tcpsocket).to receive(:puts).with(/EVENT QUERY [A-za-z=0-9+\-]+#{Handle::LINE_FEED}/)
+        expect(tcpsocket).to receive(:puts).with(/PENDING [A-za-z=0-9+\-#]+#{Handle::LINE_FEED}/)
+        expect(tcpsocket).to receive(:puts).with(/EVENT QUERY [A-za-z=0-9+\-#]+#{Handle::LINE_FEED}/)
 
         Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
       end

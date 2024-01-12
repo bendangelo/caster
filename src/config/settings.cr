@@ -5,7 +5,11 @@ module Caster
     def self.load_from_env!
       if env_pass = ENV["CASTER_PASSWORD"]?
         Caster.settings.auth_password = env_pass
-        Log.debug { "Password set from env var" }
+        Log.info { "Password set from env var" }
+      elsif Caster.settings.auth_password.blank?
+        Log.warn { "No password set" }
+      else
+        Log.info { "Password set from settings.yml" }
       end
     end
 
@@ -17,7 +21,7 @@ module Caster
       end
     end
 
-    property log_level : Int32
+    property log_level : String
     property colorize : Bool
 
     property inet : String

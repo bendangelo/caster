@@ -41,7 +41,7 @@ module Pipe
         # Generate command identifier
         event_id = BaseCommand.generate_event_id
 
-        puts "dispatching search suggest ##{event_id} on collection: #{collection} and bucket: #{bucket}"
+        Log.info { "dispatching search suggest ##{event_id} on collection: #{collection} and bucket: #{bucket}" }
 
         # Define suggest parameters
         suggest_limit = BaseCommand.parse_meta(parts, "LIMIT", Caster.settings.search.suggest_limit_default).to_i

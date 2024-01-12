@@ -9,18 +9,31 @@ module Caster
     def self.setup
       Colorize.enabled = Caster.settings.colorize
 
-      Log.setup_from_env default_level: :debug
+      backend = Log::IOBackend.new(STDOUT)
 
-      # Log.formatter = Log::Formatter.new do |entry, io|
-      #   io << entry.timestamp.to_s("%I:%M:%S")
-      #   # io << entry.timestamp.in(time_zone).to_s("%I:%M:%S")
-      #   io << " "
-      #   io << entry.source
-      #   io << " |"
-      #   io << " (#{entry.severity})" if entry.severity > Log::Severity::Debug
-      #   io << " "
-      #   io << entry.message
-      # end
+      backend.formatter = Log::Formatter.new do |entry, io|
+        io << entry.timestamp.to_s("%I:%M:%S")
+        # io << entry.timestamp.in(time_zone).to_s("%I:%M:%S")
+        io << " "
+        io << entry.source
+        if entry.severity > Log::Severity::Debug
+          case entry.severity
+          when Log::Severity::Info
+            io << " [#{entry.severity}]".colorize(:green)
+          when Log::Severity::Warn
+            io << " [#{entry.severity}]".colorize(:yellow)
+            when Log::Severity::Error
+              io << " [#{entry.severity}]".colorize(:red)
+            else
+              io << entry.message
+              end
+        end
+        io << " "
+        io << entry.message
+      end
+
+      Log.builder.clear
+      Log.builder.bind "*", Log::Severity.parse(Caster.settings.log_level), backend
     end
   end
 

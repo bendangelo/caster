@@ -59,6 +59,8 @@ module Pipe
 
       # Decrement connected clients count
       # CLIENTS_CONNECTED.write { |count| count -= 1 }
+    rescue IO::Error
+      Log.info { "Client closed by peer" }
     rescue IO::TimeoutError
       Log.info { "Timeout client" }
       stream.puts("ENDED Timeout#{LINE_FEED}")

@@ -117,13 +117,14 @@ module Pipe
       # Measure and log time it took to execute command
       # Notice: this is critical as to raise developer awareness on the performance bits when \
       #   altering commands-related code, or when making changes to underlying store executors.
-      command_took = (Time.monotonic - command_start) * 1_000
 
-      if command_took.to_i >= COMMAND_ELAPSED_MILLIS_SLOW_WARN
-        Log.warn { "took a lot of time: #{command_took}ms to process pipe message" }
+      command_took = (Time.monotonic - command_start)
+
+      if command_took.to_i * 1_000 >= COMMAND_ELAPSED_MILLIS_SLOW_WARN
+        Log.warn { "slow command: #{command_took.total_milliseconds}ms to process pipe message (#{message})" }
       else
-        Log.info { "took #{command_took}ms/#{command_took * 1_000}us/#{command_took * 1_000_000}ns to process channel message" }
-        end
+        Log.info { "took #{command_took.total_milliseconds}ms to process channel message (#{message})" }
+      end
 
       # Update command statistics
       # Notice: commands that take 0ms are not accounted for there (ie. those are usually \
