@@ -40,86 +40,86 @@ module Pipe
       collection, bucket, object, text, _ = parts.shift?, parts.shift?, parts.shift?, BaseCommand.parse_text_parts(parts), parts.shift?
       #
       # if collection && bucket && object && text && !_
-      #   puts "dispatching ingest pop in collection: #{collection}, bucket: #{bucket} and object: #{object}"
-      #   puts "ingest pop has text: #{text}"
+      #   Log.info { "dispatching ingest pop in collection: #{collection}, bucket: #{bucket} and object: #{object}" }
+      #   Log.info { "ingest pop has text: #{text}" }
       #
       #   # Make 'pop' query
       #   BaseCommand.commit_result_operation(
-      #     QueryBuilder.pop(collection, bucket, object, text)
+      #     Query::Builder.pop(collection, bucket, object, text)
       #   )
       # else
       return CommandResult.error CommandError::InvalidFormat, "POP <collection> <bucket> <object> \"<text>\""
       # end
     end
 
-    # def self.dispatch_count(parts : Slice(String)) : CommandResult
-    #   collection, bucket_part, object_part, _ = parts.shift?, parts.shift?, parts.shift?, parts.shift?
-    #
-    #   if collection && !bucket_part && !object_part && !_
-    #     puts "dispatching ingest count in collection: #{collection}"
-    #
-    #     # Make 'count' query
-    #     BaseCommand.commit_result_operation(
-    #       QueryBuilder.count(collection, bucket_part, object_part)
-    #     )
-    #   else
-    #     return Err(PipeCommandError::InvalidFormat.new("COUNT <collection> [<bucket> [<object>]?]?"))
-    #   end
-    # end
-    #
-    # def self.dispatch_flushc(parts : Slice(String)) : CommandResult
-    #   collection, _ = parts.shift?, parts.shift?
-    #
-    #   if collection && !_
-    #     puts "dispatching ingest flush collection in collection: #{collection}"
-    #
-    #     # Make 'flushc' query
-    #     BaseCommand.commit_result_operation(
-    #       QueryBuilder.flushc(collection)
-    #     )
-    #   else
-    #     return Err(PipeCommandError::InvalidFormat.new("FLUSHC <collection>"))
-    #   end
-    # end
-    #
-    # def self.dispatch_flushb(parts : Slice(String)) : CommandResult
-    #   collection, bucket, _ = parts.shift?, parts.shift?, parts.shift?
-    #
-    #   if collection && bucket && !_
-    #     puts "dispatching ingest flush bucket in collection: #{collection}, bucket: #{bucket}"
-    #
-    #     # Make 'flushb' query
-    #     BaseCommand.commit_result_operation(
-    #       QueryBuilder.flushb(collection, bucket)
-    #     )
-    #   else
-    #     return Err(PipeCommandError::InvalidFormat.new("FLUSHB <collection> <bucket>"))
-    #   end
-    # end
-    #
-    # def self.dispatch_flusho(parts : Slice(String)) : CommandResult
-    #   collection, bucket, object, _ = parts.shift?, parts.shift?, parts.shift?, parts.shift?
-    #
-    #   if collection && bucket && object && !_
-    #     puts "dispatching ingest flush object in collection: #{collection}, bucket: #{bucket}, object: #{object}"
-    #
-    #     # Make 'flusho' query
-    #     BaseCommand.commit_result_operation(
-    #       QueryBuilder.flusho(collection, bucket, object)
-    #     )
-    #   else
-    #     return Err(PipeCommandError::InvalidFormat.new("FLUSHO <collection> <bucket> <object>"))
-    #   end
-    # end
-    #
-    # def self.dispatch_help(parts : Slice(String)) : CommandResult
+    def self.dispatch_count(parts) : CommandResult
+      collection, bucket_part, object_part, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
+
+      if collection && !bucket_part && !object_part && !extra
+        Log.info { "dispatching ingest count in collection: #{collection}" }
+
+        # Make 'count' query
+        BaseCommand.commit_result_operation(
+          Query::Builder.count(collection, bucket_part, object_part)
+        )
+      else
+        return CommandResult.error CommandError::InvalidFormat, "COUNT <collection> [<bucket> [<object>]?]?"
+      end
+    end
+
+    def self.dispatch_flushc(parts) : CommandResult
+      collection, extra = parts.shift?, parts.shift?
+
+      if collection && !extra
+        Log.info { "dispatching ingest flush collection in collection: #{collection}" }
+
+        # Make 'flushc' query
+        BaseCommand.commit_result_operation(
+          Query::Builder.flushc(collection)
+        )
+      else
+        return CommandResult.error CommandError::InvalidFormat, "FLUSHC <collection>"
+      end
+    end
+
+    def self.dispatch_flushb(parts) : CommandResult
+      collection, bucket, extra = parts.shift?, parts.shift?, parts.shift?
+
+      if collection && bucket && !extra
+        Log.info { "dispatching ingest flush bucket in collection: #{collection}, bucket: #{bucket}" }
+
+        # Make 'flushb' query
+        BaseCommand.commit_result_operation(
+          Query::Builder.flushb(collection, bucket)
+        )
+      else
+        return CommandResult.error CommandError::InvalidFormat, "FLUSHB <collection> <bucket>"
+      end
+    end
+
+    def self.dispatch_flusho(parts) : CommandResult
+      collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
+
+      if collection && bucket && object && !extra
+        Log.info { "dispatching ingest flush object in collection: #{collection}, bucket: #{bucket}, object: #{object}" }
+
+        # Make 'flusho' query
+        BaseCommand.commit_result_operation(
+          Query::Builder.flusho(collection, bucket, object)
+        )
+      else
+        return CommandResult.error CommandError::InvalidFormat, "FLUSHO <collection> <bucket> <object>"
+      end
+    end
+
+    # def self.dispatch_help(parts) : CommandResult
     #   BaseCommand.generic_dispatch_help(parts, &*MANUAL_MODE_INGEST)
     # end
     #
     # def self.handle_push_meta(meta_result : MetaPartsResult) : Result(Option(QueryGenericLang), PipeCommandError)
     #   case meta_result
     #   when Ok([meta_key, meta_value])
-    #     puts "handle push meta: #{meta_key} = #{meta_value}"
+    #     Log.info { "handle push meta: #{meta_key} = #{meta_value}" }
     #
     #     case meta_key
     #     when "LANG"

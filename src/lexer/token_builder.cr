@@ -45,10 +45,10 @@ module Lexar
 
     def self.from_query_lang(lang)
       # TODO: find lang
-      {Lang::Eng, TokenMode::NormalizeOnly}
+      {TokenMode::NormalizeOnly, Lang::Eng}
     end
 
-    def self.from(mode, text, lang)
+    def self.from(mode, text, hinted_lang = nil)
 
       locale = case mode
                when TokenMode::HintedCleanup
@@ -58,10 +58,14 @@ module Lexar
                  Lang::Eng
 
                when TokenMode::NormalizeAndCleanup
-                 # Use hinted language (current lexer mode asks for cleanup)
-                 Log.info { "using hinted locale: #{lang} from lexer text: #{text}" }
-                 # lang
-                 Lang::Eng
+                 if hinted_lang.nil?
+                   Lang::Eng
+                 else
+                   # Use hinted language (current lexer mode asks for cleanup)
+                   Log.info { "using hinted locale: #{hinted_lang} from lexer text: #{text}" }
+                   # lang
+                   hinted_lang
+                 end
 
                when TokenMode::NormalizeOnly
                  Log.info { "not detecting locale from lexer text: #{text}" }

@@ -18,20 +18,30 @@ module Store
       end
     end
 
-    def self.close(collection_hash : KVAtom)
-      # Log.debug { "closing key-value database for collection: <#{collection_hash}>" }
-      #
-      # store_pool_write = STORE_POOL.write
-      # collection_target = KVKey.from_atom(collection_hash)
-      #
-      # store_pool_write do |store_pool|
-      #   store_pool.delete(collection_target)
-      # end
+    def self.find?(collection : String)
+      pool_key = KVKey.from_str(collection)
+
+      if store = @@store_pool[pool_key]?
+        return store
+      end
+
+      nil
     end
 
-    # def self.count : Int32
-    #   STORE_POOL.read!.size
-    # end
+    def self.close(collection : String)
+      pool_key = KVKey.from_str(collection)
+
+      if store = @@store_pool[pool_key]?
+        store.close
+        return @@store_pool.delete(pool_key) != nil
+      end
+
+      false
+    end
+
+    def self.count
+      @@store_pool.size
+    end
 
     def self.acquire(mode : KVAcquireMode, collection : String)
       collection_str = collection

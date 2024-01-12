@@ -33,7 +33,7 @@
 #
 # class ChannelStatistics
 #   def self.gather : ChannelStatistics
-#     kv_count, fst_count = [StoreKVPool.count, StoreFSTPool.count]
+#     kv_count, fst_count = [Store::KVPool.count, StoreFSTPool.count]
 #
 #     ChannelStatistics.new(
 #       uptime: Time.now - START_TIME,

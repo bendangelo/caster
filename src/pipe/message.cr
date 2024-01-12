@@ -11,11 +11,11 @@ module Pipe
     def self.handle_mode(mode : Mode, message : String)
       command, parts = extract message
 
-      case command
-      when "PING"
+      case command.byte_at?(0)
+      when 'P'.ord # ping
         CommandResult.new ResponseType::Pong
-      when "QUIT", "EXIT"
-        CommandResult.new ResponseType::Ended, "quit"
+      when 'E'.ord # exit
+        CommandResult.new ResponseType::Ended, "exit"
       else
         case mode
         when Mode::Search
@@ -32,15 +32,15 @@ module Pipe
     end
 
     def self.search_mode(command, parts)
-      case command
-      when "QUERY"
+      case command.byte_at?(0)
+      when 'Q'.ord # query
         SearchCommand.dispatch_query parts
-      # when "SUGGEST"
-      #   SearchCommand.dispatch_suggest parts
-        # when "LIST"
-        #   return SearchCommand.dispatch_list parts
-        # when "HELP"
-        #   return SearchCommand.dispatch_list parts
+      when 'S'.ord # suggest
+        SearchCommand.dispatch_suggest parts
+      when 'L'.ord # list
+        return SearchCommand.dispatch_list parts
+        # when "H" # help
+        #   return SearchCommand.dispatch_help parts
       else
         CommandResult.new ResponseType::Void, "command not found"
       end
@@ -48,18 +48,18 @@ module Pipe
 
     def self.ingest_mode(command, parts)
       case command
-      when "PUSH"
+      when "PUSH" # upsert
         IngestCommand.dispatch_push parts
       when "POP"
         IngestCommand.dispatch_pop parts
-        # when "COUNT"
-        #   IngestCommand.dispatch_count parts
-        # when "FLUSHC"
-        #   IngestCommand.dispatch_flushc parts
-        # when "FLUSHB"
-        #   IngestCommand.dispatch_flushb parts
-        # when "FLUSHO"
-        #   IngestCommand.dispatch_flusho parts
+      when "COUNT"
+        IngestCommand.dispatch_count parts
+      when "FLUSHC"
+        IngestCommand.dispatch_flushc parts
+      when "FLUSHB"
+        IngestCommand.dispatch_flushb parts
+      when "FLUSHO"
+        IngestCommand.dispatch_flusho parts
         # when "HELP"
         #   return SearchCommand.dispatch_list parts
       else
@@ -69,18 +69,18 @@ module Pipe
 
     def self.control_mode(command, parts)
       case command
-        # when "TRIGGER"
-        #   ControlCommand.dispatch_trigger parts
-        # when "INFO"
-        #   ControlCommand.dispatch_info parts
-        # when "COUNT"
-        #   IngestCommand.dispatch_count parts
-        # when "FLUSHC"
-        #   IngestCommand.dispatch_flushc parts
-        # when "FLUSHB"
-        #   IngestCommand.dispatch_flushb parts
-        # when "FLUSHO"
-        #   IngestCommand.dispatch_flusho parts
+        when "TRIGGER"
+          ControlCommand.dispatch_trigger parts
+        when "INFO"
+          ControlCommand.dispatch_info parts
+        when "COUNT"
+          IngestCommand.dispatch_count parts
+        when "FLUSHC"
+          IngestCommand.dispatch_flushc parts
+        when "FLUSHB"
+          IngestCommand.dispatch_flushb parts
+        when "FLUSHO"
+          IngestCommand.dispatch_flusho parts
         # when "HELP"
         #   return SearchCommand.dispatch_list parts
       else

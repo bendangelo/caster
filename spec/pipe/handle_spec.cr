@@ -154,9 +154,9 @@ Spectator.describe Pipe::Handle do
       end
     end
 
-    context "QUIT sent" do
+    context "EXIT sent" do
 
-      double :tcpsocket, gets_input: "QUIT\n", puts: nil do
+      double :tcpsocket, gets_input: "EXIT\n", puts: nil do
           stub def read(buffer)
             slice = gets_input.to_unsafe.to_slice(gets_input.size)
 
@@ -168,7 +168,7 @@ Spectator.describe Pipe::Handle do
       let(tcpsocket) { double(:tcpsocket) }
 
       it "quits" do
-        expect(tcpsocket).to receive(:puts).with("ENDED quit#{Handle::LINE_FEED}")
+        expect(tcpsocket).to receive(:puts).with("ENDED exit#{Handle::LINE_FEED}")
 
         Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
       end

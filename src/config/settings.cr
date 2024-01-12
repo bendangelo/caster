@@ -54,5 +54,11 @@ module Caster
 
     property query_limit_default : Int32
     property query_limit_maximum : Int32
+
+    property suggest_limit_default : Int32
+    property suggest_limit_maximum : Int32
+
+    property list_limit_default : Int32
+    property list_limit_maximum : Int32
   end
 end

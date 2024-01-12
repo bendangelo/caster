@@ -12,10 +12,18 @@ module Query
     FlushO
   end
 
-  struct Result
+  struct ResultLexar
     property type, item, token, query_id, limit, offset
 
     def initialize(@type : Type, @item : Store::Item, @token : Lexar::Token, @query_id : String = "", @limit : Int32 = 0, @offset : Int32 = 0)
+    end
+
+  end
+
+  struct Result
+    property type, item, query_id, limit, offset
+
+    def initialize(@type : Type, @item : Store::Item, @query_id : String = "", @limit : Int32 = 0, @offset : Int32 = 0)
     end
 
   end
@@ -29,115 +37,127 @@ module Query
       limit : Int32,
       offset : Int32,
       lang_code : String? = nil
-    ) : Result?
+    ) : ResultLexar?
       item = Store::ItemBuilder.from_depth_2(collection, bucket)
 
-      lang, mode = Lexar::TokenBuilder.from_query_lang lang_code
-      text_lexed = Lexar::TokenBuilder.from(mode, text, lang)
+      mode, hinted_lang = Lexar::TokenBuilder.from_query_lang lang_code
+      text_lexed = Lexar::TokenBuilder.from(mode, text, hinted_lang)
 
       return nil if item.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
-      Result.new Type::Search, item, text_lexed, query_id, limit, offset
+      ResultLexar.new Type::Search, item, text_lexed, query_id, limit, offset
     end
-    #
-    # def self.suggest(
-    #   query_id : String,
-    #   collection : String,
-    #   bucket : String,
-    #   terms : String,
-    #   limit : QuerySearchLimit
-    # ) : Result
-    #   store = StoreItemBuilder.from_depth_2(collection, bucket).to_result
-    #   text_lexed = Lexar::TokenBuilder.from(TokenMode::NormalizeOnly, terms).to_result
-    #
-    #   return Ok(Query::Suggest(store, query_id, text_lexed, limit)) if store && text_lexed
-    #   Err(Nil)
-    # end
-    #
-    # def self.list(
-    #   query_id : String,
-    #   collection : String,
-    #   bucket : String,
-    #   limit : QuerySearchLimit,
-    #   offset : QuerySearchOffset
-    # ) : Result
-    #   store = StoreItemBuilder.from_depth_2(collection, bucket).to_result
-    #   return Ok(Query::List(store, query_id, limit, offset)) if store
-    #   Err(Nil)
-    # end
-    #
+
+    def self.suggest(
+      query_id : String,
+      collection : String,
+      bucket : String,
+      terms : String,
+      limit : Int32
+    ) : ResultLexar?
+      item = Store::ItemBuilder.from_depth_2(collection, bucket)
+      text_lexed = Lexar::TokenBuilder.from(Lexar::TokenMode::NormalizeOnly, terms)
+
+      return nil if item.is_a? Store::ItemError
+      return nil if text_lexed.nil?
+
+      return ResultLexar.new(Type::Suggest, item, text_lexed, query_id, limit)
+    end
+
+    def self.list(
+      query_id : String,
+      collection : String,
+      bucket : String,
+      limit : Int32,
+      offset : Int32
+    ) : Result?
+      item = Store::ItemBuilder.from_depth_2(collection, bucket)
+
+      return nil if item.is_a? Store::ItemError
+
+      Result.new(Type::List, item: item, query_id: query_id, limit: limit, offset: offset)
+    end
+
     def self.push(
       collection : String,
       bucket : String,
       object : String,
       text : String,
       lang_code : String?
-    ) : Result?
+    ) : ResultLexar?
       item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
-      lang, mode = Lexar::TokenBuilder.from_query_lang lang_code
-      text_lexed = Lexar::TokenBuilder.from(mode, text, lang)
+      mode, hinted_lang = Lexar::TokenBuilder.from_query_lang lang_code
+      text_lexed = Lexar::TokenBuilder.from(mode, text, hinted_lang)
 
       return nil if item.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
-      return Result.new(Type::Push, item, text_lexed)
+      return ResultLexar.new(Type::Push, item, text_lexed)
     end
-    #
-    # def self.pop(
-    #   collection : String,
-    #   bucket : String,
-    #   object : String,
-    #   text : String
-    # ) : Result
-    #   store = StoreItemBuilder.from_depth_3(collection, bucket, object).to_result
-    #   text_lexed = Lexar::TokenBuilder.from(TokenMode::NormalizeOnly, text).to_result
-    #
-    #   return Ok(Query::Pop(store, text_lexed)) if store && text_lexed
-    #   Err(Nil)
-    # end
-    #
-    # def self.count(
-    #   collection : String,
-    #   bucket : String? = nil,
-    #   object : String? = nil
-    # ) : Result
-    #   store_result = case [bucket, object]
-    #                   when [Some(bucket_inner), Some(object_inner)]
-    #                     StoreItemBuilder.from_depth_3(collection, bucket_inner, object_inner)
-    #                   when [Some(bucket_inner), nil]
-    #                     StoreItemBuilder.from_depth_2(collection, bucket_inner)
-    #                   else
-    #                     StoreItemBuilder.from_depth_1(collection)
-    #                 end
-    #
-    #   return Ok(Query::Count(store_result)) if store_result
-    #   Err(Nil)
-    # end
-    #
-    # def self.flushc(collection : String) : Result
-    #   store = StoreItemBuilder.from_depth_1(collection).to_result
-    #   return Ok(Query::FlushC(store)) if store
-    #   Err(Nil)
-    # end
-    #
-    # def self.flushb(
-    #   collection : String,
-    #   bucket : String
-    # ) : Result
-    #   store = StoreItemBuilder.from_depth_2(collection, bucket).to_result
-    #   return Ok(Query::FlushB(store)) if store
-    #   Err(Nil)
-    # end
-    #
-    # def self.flusho(
-    #   collection : String,
-    #   bucket : String,
-    #   object : String
-    # ) : Result
-    #   store = StoreItemBuilder.from_depth_3(collection, bucket, object).to_result
-    #   return Ok(Query::FlushO(store)) if store
-    #   Err(Nil)
-    # end
+
+    def self.pop(
+      collection : String,
+      bucket : String,
+      object : String,
+      text : String
+    ) : ResultLexar?
+      item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
+      text_lexed = Lexar::TokenBuilder.from(Lexar::TokenMode::NormalizeOnly, text)
+
+      return nil if item.is_a? Store::ItemError
+      return nil if text_lexed.nil?
+
+      return ResultLexar.new(Type::Pop, item, text_lexed)
+    end
+
+    def self.count(
+      collection : String,
+      bucket : String? = nil,
+      object : String? = nil
+    ) : Result?
+    item = if bucket && object
+             Store::ItemBuilder.from_depth_3(collection, bucket, object)
+           elsif bucket
+             Store::ItemBuilder.from_depth_2(collection, bucket)
+           else
+             Store::ItemBuilder.from_depth_1(collection)
+           end
+
+      return nil if item.is_a? Store::ItemError
+
+      Result.new(Type::Count, item)
+    end
+
+    def self.flushc(collection : String) : Result?
+      item = Store::ItemBuilder.from_depth_1(collection)
+
+      return nil if item.is_a? Store::ItemError
+
+      Result.new(Type::FlushC, item)
+    end
+
+    def self.flushb(
+      collection : String,
+      bucket : String
+    ) : Result?
+      item = Store::ItemBuilder.from_depth_2(collection, bucket)
+
+      return nil if item.is_a? Store::ItemError
+
+      Result.new(Type::FlushB, item)
+    end
+
+    def self.flusho(
+      collection : String,
+      bucket : String,
+      object : String
+    ) : Result?
+      item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
+
+      return nil if item.is_a? Store::ItemError
+
+      Result.new(Type::FlushO, item)
+    end
   end
 end

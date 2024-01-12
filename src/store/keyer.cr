@@ -3,7 +3,7 @@ module Store
   KEY_SIZE = 9
 
   alias KeyBytes = Slice(UInt8)
-  alias KeyPrefix = Bytes[5]
+  alias KeyPrefix = Slice(UInt8)
 
   class Hasher
     def self.to_compact(part : String) : UInt32

@@ -3,14 +3,14 @@ module Store
   alias KVAtom = UInt32
 
   class KVBuilder
-    def self.open(collection_hash)
-      Log.debug { "opening key-value database for collection: <#{collection_hash}>" }
+    def self.open(path)
+      Log.debug { "opening key-value database for collection: <#{path}>" }
 
       # Configure database options
       db_options = configure
 
       # Open database at path for collection
-      RocksDB::DB.new(path(collection_hash), db_options)
+      RocksDB::DB.new(path, db_options)
     end
 
     def self.path(collection_hash)
@@ -43,12 +43,14 @@ module Store
     end
 
     def self.build(pool_key : UInt32)
-      db = open(pool_key)
+      path = path(pool_key)
+      db = open(path)
 
       now = Time.utc.to_unix
 
       KVStore.new(
         db: db,
+        path: path,
         last_used: Atomic.new(now),
         last_flushed: Atomic.new(now)
       )

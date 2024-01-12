@@ -147,7 +147,7 @@ module Pipe
       end
     end
 
-    def self.commit_ok_operation(query : Query::Result?) : CommandResult
+    def self.commit_ok_operation(query) : CommandResult
       return CommandResult.error CommandError::QueryError if query.nil?
 
       Store::Operation.dispatch query
@@ -155,7 +155,7 @@ module Pipe
       CommandResult.ok
     end
 
-    def self.commit_result_operation(query : Query::Result?) : CommandResult
+    def self.commit_result_operation(query) : CommandResult
       return CommandResult.error CommandError::QueryError if query.nil?
 
       results = Store::Operation.dispatch query
@@ -165,7 +165,7 @@ module Pipe
       CommandResult.new type: ResponseType::Ok, value: results
     end
 
-    def self.commit_pending_operation(query_type : String, query_id : String, query : Query::Result?)
+    def self.commit_pending_operation(query_type : String, query_id : String, query)
       return CommandResult.error CommandError::QueryError if query.nil?
 
       results = Store::Operation.dispatch query

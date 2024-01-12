@@ -5,12 +5,17 @@ module Store
     property last_used : Atomic(Int64)
     property last_flushed : Atomic(Int64)
     property lock : RWLock
+    property path : String
+    property opened : Bool = true
 
-    def initialize(@db : RocksDB::DB, @last_used :  Atomic(Int64), @last_flushed : Atomic(Int64))
+    def initialize(@db : RocksDB::DB, @last_used :  Atomic(Int64), @last_flushed : Atomic(Int64), @path : String)
       @lock = RWLock.new
     end
 
     def close
+      Log.debug { "closing key-value database for collection: <#{path}>" }
+
+      @opened = false
       @db.close
     end
 
@@ -27,6 +32,8 @@ module Store
     end
 
     def flush
+      # TODO: add flush
+      Log.error { "flush not added" }
       # Generate flush options
       # flush_options = FlushOptions.new
       # flush_options.wait = true
@@ -35,7 +42,7 @@ module Store
       # @db.flush#(flush_options)
     end
 
-    def write(batch : RocksDB::WriteBatch)
+    def write_batch(batch : RocksDB::WriteBatch)
       # Configure this write
       write_options = RocksDB::WriteOptions.new
 

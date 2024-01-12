@@ -32,11 +32,11 @@ module Tasker
   #     # Proceed all tick actions
   #
   #     # #1: Janitors
-  #     StoreKVPool.janitor
+  #     Store::KVPool.janitor
   #     StoreFSTPool.janitor
   #
   #     # #2: Others
-  #     StoreKVPool.flush(false)
+  #     Store::KVPool.flush(false)
   #     StoreFSTPool.consolidate(false)
   #   end
   # end
