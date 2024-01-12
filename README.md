@@ -1,6 +1,6 @@
 # caster
 
-TODO: Write a description here
+Text search engine
 
 ## Installation
 

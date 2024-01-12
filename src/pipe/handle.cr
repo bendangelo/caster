@@ -32,7 +32,7 @@ module Pipe
     class ChannelHandleError < Exception
     end
 
-    def self.client(stream : TCPSocket)
+    def self.client(stream, run_loop = true)
       # Configure stream (non-established)
       configure_stream(stream, false)
 
@@ -52,7 +52,7 @@ module Pipe
         # Send started acknowledgment (with environment variables)
         stream.puts("STARTED #{result.to_s} protocol(#{PROTOCOL_REVISION}) buffer(#{BUFFER_SIZE})#{LINE_FEED}")
 
-        handle_stream(result, stream)
+        handle_stream(result, stream, MAX_LINE_SIZE, run_loop)
       else
         stream.puts("ENDED #{result}#{LINE_FEED}")
       end
@@ -64,7 +64,7 @@ module Pipe
       stream.puts("ENDED Timeout#{LINE_FEED}")
     end
 
-    def self.configure_stream(stream : TCPSocket, is_established : Bool)
+    def self.configure_stream(stream, is_established : Bool)
       tcp_timeout = is_established ? Caster.settings.tcp_timeout : TCP_TIMEOUT_NON_ESTABLISHED
 
       stream.tcp_nodelay = true

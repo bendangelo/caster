@@ -3,6 +3,7 @@ require "../spec_helper"
 Spectator.describe Pipe::Handle do
   include Pipe
 
+  let(run_loop) { false }
   double :tcpsocket, gets: ""
 
   describe ".ensure_start" do
@@ -107,9 +108,28 @@ Spectator.describe Pipe::Handle do
 
     # short for testing
     let(max_line_size) { 50 }
-    let(run_loop) { false }
 
-    # TODO: test having multiple messages in one gets
+    context "bulk messages" do
+
+      double :tcpsocket, gets_input: "PING\nEXIT\n", puts: nil do
+          stub def read(buffer)
+            slice = gets_input.to_unsafe.to_slice(gets_input.size)
+
+            slice.copy_to buffer
+
+            gets_input.size
+          end
+      end
+
+      let(tcpsocket) { double(:tcpsocket) }
+
+      it "pongs then puts exits" do
+        expect(tcpsocket).to receive(:puts).with("PONG#{Handle::LINE_FEED}")
+        expect(tcpsocket).to receive(:puts).with("ENDED exit#{Handle::LINE_FEED}")
+
+        Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
+      end
+    end
 
     context "PING sent" do
 
@@ -192,6 +212,21 @@ Spectator.describe Pipe::Handle do
   end
 
   describe ".client" do
-    # TODO:
+
+    context "connets to search mode" do
+      # TODO: add client specs
+      # double :tcpsocket, gets: "START search", puts: nil, read: 0, tcp_nodelay: false
+      #
+      # let(tcpsocket) { double(:tcpsocket) }
+      #
+      # it "quits" do
+      #   Caster.settings.auth_password = ""
+      #   expect(tcpsocket).to receive(:tcp_nodelay).with(true)
+      #   expect(tcpsocket).to receive(:puts).with("#{Handle::CONNECTED_BANNER}#{Handle::LINE_FEED}")
+      #   expect(tcpsocket).to receive(:puts).with("ENDED exit#{Handle::LINE_FEED}")
+      #
+      #   Handle.client(tcpsocket, run_loop)
+      # end
+    end
   end
 end
