@@ -13,8 +13,12 @@ module Store
       RocksDB::DB.new(path, db_options)
     end
 
-    def self.path(collection_hash)
+    def self.path(collection_hash : UInt32)
       "#{Caster.settings.kv.path}/#{collection_hash}"
+    end
+
+    def self.path(collection : String)
+      "#{Caster.settings.kv.path}/#{Hasher.to_compact(collection)}"
     end
 
     def self.configure

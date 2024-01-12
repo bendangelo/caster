@@ -6,6 +6,7 @@ require "colorize"
 require "dispatch"
 require "rwlock"
 require "xxhash"
+require "file_utils"
 
 require "./settings"
 require "./logger"

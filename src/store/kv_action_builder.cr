@@ -14,16 +14,11 @@ module Store
         end
 
         # Remove KV store storage from filesystem
-        erase_result = Dir.delete(store.path)
+        erase_result = FileUtils.rm_rf(store.path)
 
-        if erase_result
-          Log.debug { "done with kv collection erasure" }
-          return 1
-        else
-          Log.debug { "kv collection store does not exist, consider already erased: #{collection}/* at path: #{store.path}" }
-          return 0
-        end
+        Log.debug { "done with kv collection erasure" }
 
+        return 1
       else
         return 0
       end

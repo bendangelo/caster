@@ -9,7 +9,7 @@ Spectator.describe Executer::Push do
       let(text) { "hello world" }
       let(collection) { "col" }
       let(bucket) { "buck" }
-      let(object) { "obj" }
+      let(object) { "push_obj" }
 
       let(store) do
         Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)

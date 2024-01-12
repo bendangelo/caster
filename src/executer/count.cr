@@ -18,8 +18,7 @@ module Executer
 
         return 0 if terms.nil?
 
-        terms.size
-
+        return terms.size
       elsif collection && bucket
         # general_fst_access_lock_read!
 
@@ -31,9 +30,9 @@ module Executer
         # end
       elsif collection
         # StoreFSTMisc.count_collection_buckets(collection).to_result.map(&.to_u32)
-      else
-        nil
       end
+
+      0
     end
   end
 end

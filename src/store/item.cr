@@ -1,6 +1,6 @@
 module Store
 
-  record Item, collection : String, bucket : String?, object : String?
+  record Item, collection : String, bucket : String? = nil, object : String? = nil
 
   enum ItemError
     InvalidCollection
