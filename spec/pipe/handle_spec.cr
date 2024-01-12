@@ -111,7 +111,7 @@ Spectator.describe Pipe::Handle do
 
     context "bulk messages" do
 
-      double :tcpsocket, gets_input: "PING\nEXIT\n", puts: nil do
+      double :tcpsocket, gets_input: "PING\nQUIT\n", puts: nil do
           stub def read(buffer)
             slice = gets_input.to_unsafe.to_slice(gets_input.size)
 
@@ -123,9 +123,9 @@ Spectator.describe Pipe::Handle do
 
       let(tcpsocket) { double(:tcpsocket) }
 
-      it "pongs then puts exits" do
+      it "pongs then puts quits" do
         expect(tcpsocket).to receive(:puts).with("PONG#{Handle::LINE_FEED}")
-        expect(tcpsocket).to receive(:puts).with("ENDED exit#{Handle::LINE_FEED}")
+        expect(tcpsocket).to receive(:puts).with("ENDED quit#{Handle::LINE_FEED}")
 
         Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
       end
@@ -174,9 +174,9 @@ Spectator.describe Pipe::Handle do
       end
     end
 
-    context "EXIT sent" do
+    context "QUIT sent" do
 
-      double :tcpsocket, gets_input: "EXIT\n", puts: nil do
+      double :tcpsocket, gets_input: "QUIT\n", puts: nil do
           stub def read(buffer)
             slice = gets_input.to_unsafe.to_slice(gets_input.size)
 
@@ -188,7 +188,7 @@ Spectator.describe Pipe::Handle do
       let(tcpsocket) { double(:tcpsocket) }
 
       it "quits" do
-        expect(tcpsocket).to receive(:puts).with("ENDED exit#{Handle::LINE_FEED}")
+        expect(tcpsocket).to receive(:puts).with("ENDED quit#{Handle::LINE_FEED}")
 
         Handle.handle_stream(Mode::Search, tcpsocket, max_line_size, run_loop)
       end
@@ -198,15 +198,15 @@ Spectator.describe Pipe::Handle do
 
       let(max_line_size) { 4 }
 
-      double :overflow_tcpsocket, read: 9999, puts: nil do
+      double :overflow_tcpsocket, read: 4, puts: nil do
       end
 
       let(overflow_tcpsocket) { double(:overflow_tcpsocket) }
 
       provided gets_input: "asdf" do
-        expect(overflow_tcpsocket).to receive(:puts).with("ENDED BufferOverflow#{Handle::LINE_FEED}")
+        expect(overflow_tcpsocket).to receive(:puts).with("ERR BufferOverflow#{Handle::LINE_FEED}")
 
-        expect{ Handle.handle_stream(Mode::Search, overflow_tcpsocket, max_line_size) }.to raise_error /buffer overflow/
+        Handle.handle_stream(Mode::Search, overflow_tcpsocket, max_line_size)
       end
     end
   end

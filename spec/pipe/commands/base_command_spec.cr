@@ -52,4 +52,14 @@ Spectator.describe Pipe::BaseCommand do
     end
 
   end
+
+  describe ".commit_result_operation" do
+  end
+
+  describe ".commit_ok_operation" do
+  end
+
+  describe ".commit_pending_operation" do
+    # TODO: write commit pending op specs
+  end
 end

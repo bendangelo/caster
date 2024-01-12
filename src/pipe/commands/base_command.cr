@@ -180,7 +180,7 @@ module Pipe
 
       return CommandResult.error CommandError::InternalError if results.nil?
 
-      CommandResult.new type: ResponseType::Ok, value: results
+      CommandResult.new type: ResponseType::Result, value: results
     end
 
     def self.commit_pending_operation(query_type : String, query_id : String, query)

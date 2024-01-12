@@ -83,15 +83,15 @@ module Pipe
         break if read_length == 0
 
         # Buffer overflow?
-        buffer_len = read_length
-        if buffer_len > max_line_size
+        # Log.debug { "read length #{read_length} max line size #{max_line_size}" }
+        if read_length == max_line_size
           # Do not continue, as there is too much pending data in the buffer.
           # Most likely the client does not implement a proper back-pressure
           # management system, thus we terminate it.
-          stream.puts("ENDED BufferOverflow#{LINE_FEED}")
+          stream.puts("ERR BufferOverflow#{LINE_FEED}")
 
-          Log.error { "closing pipe thread because of buffer overflow" }
-          raise "buffer overflow (#{buffer_len}/#{max_line_size} bytes)"
+          Log.error { "closing pipe thread because of buffer overflow (#{read_length}/#{max_line_size} bytes)" }
+          return
         end
 
         # Add chunk to buffer

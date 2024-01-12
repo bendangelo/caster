@@ -19,7 +19,7 @@ module Pipe
           Log.info { "will push for text: #{text} with hinted locale: #{push_lang}" }
 
           # Commit 'push' query
-          BaseCommand.commit_ok_operation Query::Builder.push(collection, bucket, object, text, push_lang)
+          return BaseCommand.commit_ok_operation Query::Builder.push(collection, bucket, object, text, push_lang)
         end
       else
         CommandResult.error CommandError::InvalidFormat, "PUSH <collection> <bucket> <object> [LANG value]? -- <text>"

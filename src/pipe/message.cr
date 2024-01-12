@@ -11,11 +11,11 @@ module Pipe
     def self.handle_mode(mode : Mode, message : String)
       command, args = extract message
 
-      case command.byte_at?(0)
-      when 'P'.ord # ping
+      case command
+      when "PING"
         CommandResult.new ResponseType::Pong
-      when 'E'.ord # exit
-        CommandResult.new ResponseType::Ended, "exit"
+      when "QUIT"
+        CommandResult.new ResponseType::Ended, "quit"
       else
         case mode
         when Mode::Search
@@ -25,7 +25,7 @@ module Pipe
         when Mode::Control
           control_mode command, args
         else
-          CommandResult.new ResponseType::Void, "unhandled command"
+          CommandResult.new ResponseType::Err, value: "unhandled command (#{command})", error: CommandError::NotFound
         end
       end
 
@@ -42,7 +42,7 @@ module Pipe
         # when "H" # help
         #   return SearchCommand.dispatch_help args
       else
-        CommandResult.new ResponseType::Void, "command not found"
+        CommandResult.new ResponseType::Err, "command not found (#{command})", error: CommandError::NotFound
       end
     end
 
@@ -63,7 +63,7 @@ module Pipe
         # when "HELP"
         #   return SearchCommand.dispatch_list args
       else
-        CommandResult.new ResponseType::Void, "command not found"
+        CommandResult.new ResponseType::Err, "command not found (#{command})", error: CommandError::NotFound
       end
     end
 
@@ -154,7 +154,7 @@ module Pipe
 
       stream.puts message
 
-      Log.debug { "wrote response with values: (#{message})" }
+      Log.debug { "wrote response with values: (#{message.chomp})" }
     end
 
     def self.extract(message : String) : {String, String}
