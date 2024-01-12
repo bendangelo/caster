@@ -1,5 +1,5 @@
 module Caster
 
-  module Lexar
+  module Lexer
   end
 end

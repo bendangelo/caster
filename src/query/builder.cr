@@ -12,10 +12,10 @@ module Query
     FlushO
   end
 
-  struct ResultLexar
+  struct ResultLexer
     property type, item, token, query_id, limit, offset
 
-    def initialize(@type : Type, @item : Store::Item, @token : Lexar::Token, @query_id : String = "", @limit : Int32 = 0, @offset : Int32 = 0)
+    def initialize(@type : Type, @item : Store::Item, @token : Lexer::Token, @query_id : String = "", @limit : Int32 = 0, @offset : Int32 = 0)
     end
 
   end
@@ -37,16 +37,16 @@ module Query
       limit : Int32,
       offset : Int32,
       lang_code : String? = nil
-    ) : ResultLexar?
+    ) : ResultLexer?
       item = Store::ItemBuilder.from_depth_2(collection, bucket)
 
-      mode, hinted_lang = Lexar::TokenBuilder.from_query_lang lang_code
-      text_lexed = Lexar::TokenBuilder.from(mode, text, hinted_lang)
+      mode, hinted_lang = Lexer::TokenBuilder.from_query_lang lang_code
+      text_lexed = Lexer::TokenBuilder.from(mode, text, hinted_lang)
 
       return nil if item.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
-      ResultLexar.new Type::Search, item, text_lexed, query_id, limit, offset
+      ResultLexer.new Type::Search, item, text_lexed, query_id, limit, offset
     end
 
     def self.suggest(
@@ -55,14 +55,14 @@ module Query
       bucket : String,
       terms : String,
       limit : Int32
-    ) : ResultLexar?
+    ) : ResultLexer?
       item = Store::ItemBuilder.from_depth_2(collection, bucket)
-      text_lexed = Lexar::TokenBuilder.from(Lexar::TokenMode::NormalizeOnly, terms)
+      text_lexed = Lexer::TokenBuilder.from(Lexer::TokenMode::NormalizeOnly, terms)
 
       return nil if item.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
-      return ResultLexar.new(Type::Suggest, item, text_lexed, query_id, limit)
+      return ResultLexer.new(Type::Suggest, item, text_lexed, query_id, limit)
     end
 
     def self.list(
@@ -85,15 +85,15 @@ module Query
       object : String,
       text : String,
       lang_code : String?
-    ) : ResultLexar?
+    ) : ResultLexer?
       item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
-      mode, hinted_lang = Lexar::TokenBuilder.from_query_lang lang_code
-      text_lexed = Lexar::TokenBuilder.from(mode, text, hinted_lang)
+      mode, hinted_lang = Lexer::TokenBuilder.from_query_lang lang_code
+      text_lexed = Lexer::TokenBuilder.from(mode, text, hinted_lang)
 
       return nil if item.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
-      return ResultLexar.new(Type::Push, item, text_lexed)
+      return ResultLexer.new(Type::Push, item, text_lexed)
     end
 
     def self.pop(
@@ -101,14 +101,14 @@ module Query
       bucket : String,
       object : String,
       text : String
-    ) : ResultLexar?
+    ) : ResultLexer?
       item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
-      text_lexed = Lexar::TokenBuilder.from(Lexar::TokenMode::NormalizeOnly, text)
+      text_lexed = Lexer::TokenBuilder.from(Lexer::TokenMode::NormalizeOnly, text)
 
       return nil if item.is_a? Store::ItemError
       return nil if text_lexed.nil?
 
-      return ResultLexar.new(Type::Pop, item, text_lexed)
+      return ResultLexer.new(Type::Pop, item, text_lexed)
     end
 
     def self.count(

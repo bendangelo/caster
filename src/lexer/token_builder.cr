@@ -1,4 +1,4 @@
-module Lexar
+module Lexer
 
 
   enum TokenLexerWords

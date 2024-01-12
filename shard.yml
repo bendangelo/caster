@@ -17,16 +17,16 @@ dependencies:
     github: bendangelo/xxhash
     branch: upgraded-to-0-8-1
 
+  text:
+    github: johnjansen/text
+    branch: master
+
   rwlock:
     github: spider-gazelle/readers-writer
 
-  dispatch:
-    github: bendangelo/dispatch
-    branch: upgraded
-
-  optarg:
-    git: https://github.com/amberframework/optarg.git
-    branch: master
+  # dispatch:
+  #   github: bendangelo/dispatch
+  #   branch: upgraded
 
 development_dependencies:
   spectator:

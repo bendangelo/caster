@@ -3,9 +3,10 @@ require "log"
 require "rocksdb"
 require "yaml"
 require "colorize"
-require "dispatch"
+# require "dispatch"
 require "rwlock"
 require "xxhash"
+require "text"
 require "file_utils"
 
 require "./settings"
@@ -26,9 +27,9 @@ module Caster
     @@settings ||= Settings.from_yaml File.read Caster::Settings.settings_path
   end
 
-  def self.boot
+  def self.boot(silent = false)
     Caster::Logger.setup
-    Caster::Settings.load_from_env!
+    Caster::Settings.load_from_env! silent
   end
 
   def self.shutdown

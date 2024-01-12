@@ -18,7 +18,7 @@ Spectator.describe Executer::Push do
         Store::KVAction.new(bucket: bucket, store: store)
       end
       let(item) { Store::Item.new collection, bucket, object }
-      let(token) { Lexar::Token.new Lexar::TokenMode::NormalizeOnly, text, Lexar::Lang::Eng }
+      let(token) { Lexer::Token.new Lexer::TokenMode::NormalizeOnly, text, Lexer::Lang::Eng }
 
       before do
         Push.execute item, token

@@ -19,7 +19,7 @@ Spectator.describe Executer::Search do
       end
       let(event_id) { "eventid" }
       let(item) { Store::Item.new collection, bucket, nil }
-      let(token) { Lexar::Token.new Lexar::TokenMode::NormalizeOnly, text, Lexar::Lang::Eng }
+      let(token) { Lexer::Token.new Lexer::TokenMode::NormalizeOnly, text, Lexer::Lang::Eng }
       let(limit) { 10 }
       let(offset) { 0 }
       let(iids) { Set.new UInt32[1] }

@@ -1,6 +1,6 @@
 module Executer
   class Suggest
-    def self.execute(store : Store::Item, event_id : String, token : Lexar::Token, limit : Int32)
+    def self.execute(store : Store::Item, event_id : String, token : Lexer::Token, limit : Int32)
       # if let Store::Item(collection, Some(bucket), Nil) = store
       #   general_fst_access_lock_read!
       #

@@ -65,9 +65,7 @@ module Store
     end
 
     def self.iid_to_terms(bucket : String, iid : UInt32) : Keyer
-      route = iid
-
-      Keyer.new(build_key(Idx::IIDToTerms.value.to_u8, bucket, route))
+      Keyer.new(build_key(Idx::IIDToTerms.value.to_u8, bucket, iid))
     end
 
     private def self.build_key(idx : UInt8, bucket : String, route : UInt32) : KeyBytes

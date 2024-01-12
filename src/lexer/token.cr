@@ -1,4 +1,4 @@
-module Lexar
+module Lexer
   alias TermHash = UInt32
 
   enum Lang
@@ -14,13 +14,14 @@ module Lexar
     NormalizeOnly
   end
 
+  STOP_WORDS = {"the", "and", "is", "you", "are", "where", "am", "I", "it", "a"}
+
   struct Token
     @mode : TokenMode
     @locale : Lang
-    @words : Array(String)
-    @yields : Set(TermHash)
+    @text : String
 
-    def initialize(@mode : TokenMode, @text : String, @locale : Lang)
+    def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng)
       # Tokenize words depending on the locale
       # @words = case @locale
       #          when Lang::Cmn
@@ -35,27 +36,42 @@ module Lexar
       #          else
       #            TokenLexerWords::UAX29(@text.unicode_words.to_a)
       #          end
-      @words = @text.split " "
 
-      @yields = Set(TermHash).new
     end
 
-    def each
-      @words.each do |word|
+    def parse_text
+      result = [] of String | UInt32
+
+      parse_text do |term, hash, index|
+        result << term
+        result << hash
+        result << index.to_u32
+      end
+
+      result
+    end
+
+    def parse_text
+      words = @text.split(/\W+/)
+      yields = Set(TermHash).new
+
+      words.each_with_index do |word, index|
         word = word.downcase
 
-        # TODO: if stop word, skip...
+        next if word.blank? || STOP_WORDS.includes?(word)
+
+        word = word.stem
 
         term_hash = Store::Hasher.to_compact word
 
-        if @yields.add? term_hash
-          Log.debug { "Lexar yielded #{term_hash}" }
-
-          yield word, term_hash
+        if yields.add? term_hash
+          Log.debug { "Lexer yielded #{term_hash}" }
+          yield word, term_hash, index
         else
-          Log.debug { "Lexar did not yield #{term_hash} because already in set" }
+          Log.debug { "Lexer did not yield #{term_hash} because already in set" }
         end
       end
+
     end
   end
 

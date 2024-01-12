@@ -1,6 +1,6 @@
 module Executer
   class Pop
-    def self.execute(item : Store::Item, token : Lexar::Token)
+    def self.execute(item : Store::Item, token : Lexer::Token)
 
       # TODO: add pop
       collection, bucket, object = item.collection, item.bucket, item.object

@@ -1,17 +1,5 @@
 version: 2.0
 shards:
-  callback:
-    git: https://github.com/amberframework/callback.git
-    version: 0.9.2
-
-  dispatch:
-    git: https://github.com/bendangelo/dispatch.git
-    version: 0.2.0+git.commit.46d3904332d52f9f071fb8e1661ae914c3c237c3
-
-  optarg:
-    git: https://github.com/amberframework/optarg.git
-    version: 0.9.3+git.commit.2494b325ba8f8f9b142b8a69b0204e6659bd532b
-
   rocksdb:
     git: https://github.com/maiha/rocksdb.cr.git
     version: 1.1.0
@@ -23,6 +11,10 @@ shards:
   spectator:
     git: https://gitlab.com/arctic-fox/spectator.git
     version: 0.11.7
+
+  text:
+    git: https://github.com/johnjansen/text.git
+    version: 0.1.0+git.commit.5b41506d9d3ae0a4b970c6daa506d0501e7a3c20
 
   xxhash:
     git: https://github.com/bendangelo/xxhash.git

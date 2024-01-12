@@ -2,14 +2,14 @@ module Caster
   class Settings
     include YAML::Serializable
 
-    def self.load_from_env!
+    def self.load_from_env!(silent = false)
       if env_pass = ENV["CASTER_PASSWORD"]?
         Caster.settings.auth_password = env_pass
-        Log.info { "Password set from env var" }
+        Log.info { "Password set from env var" } if !silent
       elsif Caster.settings.auth_password.blank?
-        Log.warn { "No password set" }
+        Log.warn { "No password set" } if !silent
       else
-        Log.info { "Password set from settings.yml" }
+        Log.info { "Password set from settings.yml" } if !silent
       end
     end
 

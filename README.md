@@ -28,6 +28,9 @@ shards build --release
 ```
 ENV["CASTER_CONFIG"] = ./path/settings.yml
 ENV["CASTER_PASSWORD"] = password
+
+shards build --release -Dpreview_mt
+./bin/caster CRYSTAL_WORKERS=4 # number of cpu cores
 ```
 
 ## Contributing

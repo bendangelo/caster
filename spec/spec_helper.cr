@@ -4,7 +4,7 @@ require "spectator"
 require "spectator/should"
 require "file_utils"
 
-Caster.boot
+Caster.boot true
 
 # clear rocksdb
 Caster.settings.kv.path = "./data/tmp/"

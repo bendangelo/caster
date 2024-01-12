@@ -1,6 +1,6 @@
 module Executer
   class Push
-    def self.execute(item : Store::Item, token : Lexar::Token)
+    def self.execute(item : Store::Item, token : Lexer::Token)
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
 
@@ -50,7 +50,7 @@ module Executer
 
       Log.info { "got push executor stored iid-to-terms: #{iid_terms_hashed}" }
 
-      token.each do |term, term_hashed|
+      token.parse_text do |term, term_hashed|
         if iid_terms_hashed.add?(term_hashed)
           term_iids = kv_action.get_term_to_iids(term_hashed)
           term_iids = term_iids.nil? ? Set(UInt32).new : term_iids

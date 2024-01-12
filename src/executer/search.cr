@@ -1,6 +1,6 @@
 module Executer
   class Search
-    def self.execute(store : Store::Item, event_id : String, lexer : Lexar::Token, limit : Int32, offset : Int32)
+    def self.execute(store : Store::Item, event_id : String, lexer : Lexer::Token, limit : Int32, offset : Int32)
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
@@ -22,7 +22,7 @@ module Executer
 
       found_iids = Set(UInt32).new
 
-      lexer.each do |term, term_hashed|
+      lexer.parse_text do |term, term_hashed, index|
         iids = kv_action.get_term_to_iids(term_hashed)
 
         next if iids.nil?

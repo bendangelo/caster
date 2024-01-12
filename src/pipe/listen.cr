@@ -14,9 +14,11 @@ module Pipe
     end
 
     def self.handle_client(stream)
-      Log.debug { "channel client connecting: #{stream.remote_address}" }
+      Log.info { "channel client connecting: #{stream.remote_address}" }
 
       Handle.client(stream)
+    rescue IO::Error # tried to puts to a broken connection
+      Log.info { "channel client closed by peer: #{stream.remote_address}" }
     end
 
     def self.available?
