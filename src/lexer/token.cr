@@ -14,14 +14,17 @@ module Lexer
     NormalizeOnly
   end
 
-  STOP_WORDS = {"the", "and", "is", "you", "are", "where", "am", "I", "it", "a"}
-
   struct Token
     @mode : TokenMode
     @locale : Lang
     @text : String
 
     def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng)
+      # TODO: add rocks flushing and batch write
+      # TODO: index words based on position (index to a max in the settings)
+      # TODO: fetch based on all words being in list
+      # TODO: save metadata for iid
+      # TODO: add ORDER to query and ASC / DESC ex: QUERY videos all ORDER 0 ASC -- my query
       # Tokenize words depending on the locale
       # @words = case @locale
       #          when Lang::Cmn
@@ -58,8 +61,9 @@ module Lexer
       words.each_with_index do |word, index|
         word = word.downcase
 
-        next if word.blank? || STOP_WORDS.includes?(word)
+        next if word.blank? || Lexer::Eng::STOP_WORDS.includes?(word)
 
+        # TODO: use https://snowballstem.org/
         word = word.stem
 
         term_hash = Store::Hasher.to_compact word
