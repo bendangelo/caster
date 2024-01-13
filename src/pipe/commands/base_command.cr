@@ -22,6 +22,18 @@ module Pipe
     Event #(String, String, String)
     Ended #(String)
     Err #(CommandError)
+
+    # all enums output to uppercase for responses
+    def to_s
+      {% begin %}
+        case self
+          {% for member in @type.constants %}
+            in .{{ member.id.downcase }}?
+              "{{ member.id.upcase }}"
+          {% end %}
+        end
+      {% end %}
+    end
   end
 
   struct CommandResult

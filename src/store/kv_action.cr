@@ -202,6 +202,7 @@ module Store
         Log.debug { "store delete iid-to-oid: #{store_key}" }
 
         store.delete(store_key.as_bytes)
+        true
       else
         nil
       end
@@ -250,6 +251,56 @@ module Store
         store_key = Keyer.iid_to_terms(@bucket, iid)
 
         Log.debug { "store delete iid-to-terms: #{store_key}" }
+
+        store.delete(store_key.as_bytes)
+      else
+        nil
+      end
+    end
+
+    # IID-to-Attrs mapper
+    #
+    # [IDX=5] ((iid)) ~> [((attr))]
+    def get_iid_to_attrs(iid : UInt32)
+      if store
+        store_key = Keyer.iid_to_attrs(@bucket, iid)
+
+        Log.debug { "store get iid-to-attrs: #{store_key}" }
+
+        if value = store.get?(store_key.as_bytes)
+          decoded_value = KVAction.decode_u16_array(value)
+
+          Log.debug { "got iid-to-attrs: #{store_key} with decoded value: #{decoded_value}" }
+          decoded_value
+        else
+          nil
+        end
+      else
+        nil
+      end
+    end
+
+    def set_iid_to_attrs(iid : UInt32, attrs : Array(UInt16))
+      if store
+        store_key = Keyer.iid_to_attrs(@bucket, iid)
+
+        Log.debug { "store set iid-to-attrs: #{store_key}" }
+
+        terms_hashed_encoded = KVAction.encode_u16_array(attrs)
+
+        Log.debug { "store set iid-to-attrs: #{store_key} with encoded value: #{terms_hashed_encoded}" }
+
+        store.put(store_key.as_bytes, terms_hashed_encoded)
+      else
+        nil
+      end
+    end
+
+    def delete_iid_to_attrs(iid : UInt32)
+      if store
+        store_key = Keyer.iid_to_attrs(@bucket, iid)
+
+        Log.debug { "store delete iid-to-attrs: #{store_key}" }
 
         store.delete(store_key.as_bytes)
       else
@@ -396,6 +447,28 @@ module Store
       encoded.each_with_index do |byte, i|
         if i % 4 == 0
           decoded << decode_u32(encoded[i, 4])
+        end
+      end
+
+      decoded
+    end
+
+    def self.encode_u16_array(decoded : Array(UInt16)) : Bytes
+      io = IO::Memory.new(decoded.size * 4)
+
+      decoded.each do |decoded_item|
+        io.write_bytes(decoded_item, IO::ByteFormat::LittleEndian)
+      end
+
+      io.to_slice
+    end
+
+    def self.decode_u16_array(encoded : Bytes)
+      decoded = Array(UInt16).new(encoded.size)
+
+      encoded.each_with_index do |byte, i|
+        if i % 2 == 0
+          decoded << IO::ByteFormat::LittleEndian.decode(UInt16, encoded[i, 2])
         end
       end
 

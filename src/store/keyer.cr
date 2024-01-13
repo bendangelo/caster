@@ -18,6 +18,7 @@ module Store
       OIDToIID = 2#(ObjectOID),
       IIDToOID = 3#(ObjectIID),
       IIDToTerms = 4#(ObjectIID)
+      IIDToAttrs = 5#(ObjectIID)
   end
 
   struct Keyer
@@ -66,6 +67,10 @@ module Store
 
     def self.iid_to_terms(bucket : String, iid : UInt32) : Keyer
       Keyer.new(build_key(Idx::IIDToTerms.value.to_u8, bucket, iid))
+    end
+
+    def self.iid_to_attrs(bucket : String, iid : UInt32) : Keyer
+      Keyer.new(build_key(Idx::IIDToAttrs.value.to_u8, bucket, iid))
     end
 
     private def self.build_key(idx : UInt8, bucket : String, route : UInt32) : KeyBytes

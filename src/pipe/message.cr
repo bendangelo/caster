@@ -108,12 +108,12 @@ module Pipe
         result.each do |args|
           puts_message stream, args.type, args.value
 
-          continue_pipe = MessageResult::Close if args.type == ResponseType::Ended
+          continue_pipe = :close if args.type == ResponseType::Ended
         end
       else
         puts_message stream, result.type, result.value
 
-        continue_pipe = MessageResult::Close if result.type == ResponseType::Ended
+        continue_pipe = :close if result.type == ResponseType::Ended
       end
 
       # Measure and log time it took to execute command
@@ -150,9 +150,9 @@ module Pipe
 
     def self.puts_message(stream, response_type, response_values)
       if response_values.blank?
-        message = "#{response_type.to_s.upcase}#{Handle::LINE_FEED}"
+        message = "#{response_type}#{Handle::LINE_FEED}"
       else
-        message = "#{response_type.to_s.upcase} #{response_values}#{Handle::LINE_FEED}"
+        message = "#{response_type} #{response_values}#{Handle::LINE_FEED}"
       end
 
       stream.puts message

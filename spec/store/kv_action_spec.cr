@@ -60,6 +60,30 @@ Spectator.describe Store::KVAction do
     end
   end
 
+  describe "#encode_u16_array" do
+    subject { KVAction.encode_u16_array input }
+
+    provided input: UInt16[0, 2, 3] do
+      expect(subject).to eq Bytes[0, 0, 2, 0, 3, 0]
+    end
+
+    provided input: UInt16[45402] do
+      expect(subject).to eq Bytes[90, 177]
+    end
+  end
+
+  describe "#decode_u16_array" do
+    subject { KVAction.decode_u16_array input }
+
+    provided input: Bytes[0, 0, 2, 0, 3, 0] do
+      expect(subject).to eq UInt16[0, 2, 3]
+    end
+
+    provided input: Bytes[90, 177] do
+      expect(subject).to eq UInt16[45402]
+    end
+  end
+
   context "gets / sets / delete" do
     let(collection) { "videos" }
     let(bucket) { "all" }
@@ -107,6 +131,15 @@ Spectator.describe Store::KVAction do
       expect( action.get_iid_to_terms(4_u32)).to eq Set.new UInt32[45402]
       expect( action.delete_iid_to_terms(4_u32)).to eq true
       expect( action.get_iid_to_terms(4_u32)).to eq nil
+    end
+
+    it "iid to attrs" do
+      iid = 4_u32
+      expect( action.get_iid_to_attrs(iid)).to eq nil
+      expect( action.set_iid_to_attrs(iid, UInt16[45402_u16])).to eq nil
+      expect( action.get_iid_to_attrs(iid)).to eq UInt16[45402]
+      expect( action.delete_iid_to_attrs(iid)).to eq true
+      expect( action.get_iid_to_attrs(iid)).to eq nil
     end
   end
 
