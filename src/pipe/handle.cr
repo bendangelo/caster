@@ -60,8 +60,7 @@ module Pipe
       # Decrement connected clients count
       # CLIENTS_CONNECTED.write { |count| count -= 1 }
     rescue IO::TimeoutError
-      Log.info { "Timeout client" }
-      stream.puts("ENDED Timeout#{LINE_FEED}")
+      Log.warn { "timeout error channel client peer: #{stream.remote_address}" }
     end
 
     def self.configure_stream(stream, is_established : Bool)
@@ -128,7 +127,7 @@ module Pipe
         # Incomplete line remaining? Put it back in buffer.
         buffer += processed_line unless processed_index == 0
 
-        break if !run_loop
+        break if !run_loop || Pipe::Listen.shutdown?
       end
     end
 
@@ -168,7 +167,7 @@ module Pipe
         return ResultError::NotRecognized
       end
     rescue IO::TimeoutError
-      Log.info { "Timeout client" }
+      Log.warn { "timeout error channel client peer: #{stream.remote_address}" }
       return ResultError::Timeout
     end
 

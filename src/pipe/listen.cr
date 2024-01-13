@@ -25,9 +25,16 @@ module Pipe
       PIPE_AVAILABLE.get == 1
     end
 
+    def self.shutdown?
+      !available?
+    end
+
     def self.teardown
       # Channel cannot be used anymore
       PIPE_AVAILABLE.set(0)
+
+      # TODO: Set all clients to non-blocking and close
+      # blocking = false
     end
   end
 end

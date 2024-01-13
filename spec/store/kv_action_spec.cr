@@ -81,7 +81,7 @@ Spectator.describe Store::KVAction do
       expect( action.get_term_to_iids(1)).to eq nil
       expect( action.set_term_to_iids(1_u32, Set.new UInt32[0, 1, 2])).to eq nil
       expect( action.get_term_to_iids(1)).to eq Set.new UInt32[0, 1, 2]
-      expect( action.delete_term_to_iids(1)).to eq nil
+      expect( action.delete_term_to_iids(1)).to eq true
       expect( action.get_term_to_iids(1)).to eq nil
     end
 
@@ -89,7 +89,7 @@ Spectator.describe Store::KVAction do
       expect( action.get_oid_to_iid("s")).to eq nil
       expect( action.set_oid_to_iid("s", 4)).to eq nil
       expect( action.get_oid_to_iid("s")).to eq 4
-      expect( action.delete_oid_to_iid("s")).to eq nil
+      expect( action.delete_oid_to_iid("s")).to eq true
       expect( action.get_oid_to_iid("s")).to eq nil
     end
 
@@ -97,7 +97,7 @@ Spectator.describe Store::KVAction do
       expect( action.get_iid_to_oid(4)).to eq nil
       expect( action.set_iid_to_oid(4, "s")).to eq nil
       expect( action.get_iid_to_oid(4)).to eq "s"
-      expect( action.delete_iid_to_oid(4)).to eq nil
+      expect( action.delete_iid_to_oid(4)).to eq true
       expect( action.get_iid_to_oid(4)).to eq nil
     end
 
@@ -105,8 +105,83 @@ Spectator.describe Store::KVAction do
       expect( action.get_iid_to_terms(4_u32)).to eq nil
       expect( action.set_iid_to_terms(4_u32, Set.new [45402_u32])).to eq nil
       expect( action.get_iid_to_terms(4_u32)).to eq Set.new UInt32[45402]
-      expect( action.delete_iid_to_terms(4_u32)).to eq nil
+      expect( action.delete_iid_to_terms(4_u32)).to eq true
       expect( action.get_iid_to_terms(4_u32)).to eq nil
+    end
+  end
+
+  describe "#batch_erase_bucket" do
+    let(collection) { "videos" }
+    let(bucket) { "all" }
+
+    let(store) do
+      Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
+    end
+    let(action) do
+      Store::KVAction.new(bucket: bucket, store: store)
+    end
+
+    before do
+      action.set_meta_to_value(IIDIncr, 1)
+      action.set_term_to_iids(1_u32, Set{1_u32})
+      action.set_oid_to_iid("10", 1)
+      action.set_iid_to_oid(1_u32, "10")
+      action.set_iid_to_terms(1_u32, Set{1_u32})
+    end
+
+    it "clears bucket" do
+      # expect(action.batch_erase_bucket).to eq nil
+      #
+      # expect(action.get_meta_to_value(IIDIncr)).to eq nil
+      # expect(action.get_term_to_iids(1_u32)).to eq nil
+      # expect(action.get_oid_to_iid("10")).to eq nil
+      # expect(action.get_iid_to_oid(1_u32)).to eq nil
+      # expect(action.get_iid_to_terms(1_u32)).to eq nil
+
+    end
+  end
+
+  describe "#batch_flush_bucket" do
+    let(collection) { "videos" }
+    let(bucket) { "all" }
+    let(object) { "testobj" }
+    let(iid) { 1_u32 }
+    let(term) { 2_u32 }
+    let(other_iid) { 4_u32 }
+
+    let(store) do
+      Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
+    end
+    let(action) do
+      Store::KVAction.new(bucket: bucket, store: store)
+    end
+
+    before do
+      action.set_oid_to_iid(object, iid)
+      action.set_iid_to_oid(iid, object)
+      action.set_iid_to_terms(iid, Set{term})
+      action.set_term_to_iids(term, Set{iid})
+    end
+
+    it "deletes term to iids" do
+
+      expect(action.get_term_to_iids(term)).to eq Set{iid}
+
+      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 1
+
+      expect(action.get_term_to_iids(term)).to eq nil
+      expect(action.get_oid_to_iid(object)).to eq nil
+      expect(action.get_iid_to_oid(iid)).to eq nil
+      expect(action.get_iid_to_terms(iid)).to eq nil
+
+    end
+
+    it "keeps terms for other iids" do
+      action.set_term_to_iids(term, Set{iid, other_iid})
+
+      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 1
+
+      expect(action.get_term_to_iids(term)).to eq Set{other_iid}
     end
   end
 end

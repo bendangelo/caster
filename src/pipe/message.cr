@@ -39,6 +39,8 @@ module Pipe
         SearchCommand.dispatch_suggest args
       when 'L'.ord # list
         return SearchCommand.dispatch_list args
+        # when 'M'.ord # meta # update or insert meta data for an obj # TODO: add meta
+      #   return SearchCommand.dispatch_list args
         # when "H" # help
         #   return SearchCommand.dispatch_help args
       else

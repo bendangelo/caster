@@ -10,8 +10,8 @@ targets:
 
 dependencies:
   rocksdb:
-    github: maiha/rocksdb.cr
-    version: 1.1.0
+    github: bendangelo/rocksdb.cr
+    branch: batch-write
 
   xxhash:
     github: bendangelo/xxhash

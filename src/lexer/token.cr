@@ -20,11 +20,6 @@ module Lexer
     @text : String
 
     def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng)
-      # TODO: add rocks flushing and batch write
-      # TODO: index words based on position (index to a max in the settings)
-      # TODO: fetch based on all words being in list
-      # TODO: save metadata for iid
-      # TODO: add ORDER to query and ASC / DESC ex: QUERY videos all ORDER 0 ASC -- my query
       # Tokenize words depending on the locale
       # @words = case @locale
       #          when Lang::Cmn

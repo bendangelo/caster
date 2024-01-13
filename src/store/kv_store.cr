@@ -29,34 +29,35 @@ module Store
 
     def delete(key : Bytes)
       @db.delete key
+
+      true
     end
 
     def flush
       # TODO: add flush
       Log.error { "flush not added" }
       # Generate flush options
-      # flush_options = FlushOptions.new
-      # flush_options.wait = true
+      flush_options = RocksDB::FlushOptions.new
+      flush_options.set_wait(1)
 
-      # Perform flush (in blocking mode)
-      # @db.flush#(flush_options)
+      @db.flush(flush_options)
     end
 
-    def write_batch(batch : RocksDB::WriteBatch)
+    def write(batch : RocksDB::WriteBatch)
       # Configure this write
       write_options = RocksDB::WriteOptions.new
 
       # WAL disabled?
       if !Caster.settings.kv.database.write_ahead_log
         Log.debug { "ignoring wal for kv write" }
-        write_options.disable_wal(true)
+        write_options.disable_wal(1)
       else
         Log.debug { "using wal for kv write" }
-        write_options.disable_wal(false)
+        write_options.disable_wal(0)
       end
 
       # Commit this write
-      @db.write_opt(batch, write_options)
+      @db.write(batch, write_options)
     end
   end
 

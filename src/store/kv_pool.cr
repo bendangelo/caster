@@ -107,58 +107,65 @@ module Store
     #   dump_action("restore", path, APP_CONF.store.kv.path, &restore_item)
     # end
 
-    # def self.flush(force : Bool)
-    #   Log.debug { "scanning for kv store pool items to flush to disk" }
-    #
-    #   # Acquire flush lock, and reference it in context
-    #   # Notice: this prevents two flush operations to be executed at the same time.
-    #   _flush = STORE_FLUSH_LOCK.lock
-    #
-    #   # Step 1: List keys to be flushed
-    #   keys_flush = STORE_POOL.read!.select do |key, store|
-    #     # Important: be lenient with the system clock going back to a past duration since
-    #     #   we may be running in a virtualized environment where the clock is not guaranteed
-    #     #   to be monotonic. This is done to avoid poisoning associated mutexes by
-    #     #   crashing on unwrap().
-    #     not_flushed_for = store.last_flushed.read.elapsed || Duration::ZERO
-    #
-    #     if force || not_flushed_for >= APP_CONF.store.kv.database.flush_after
-    #       Log.info { "kv key: #{key} not flushed for: #{not_flushed_for.seconds}, may flush" }
-    #       true
-    #     else
-    #       Log.debug { "kv key: #{key} not flushed for: #{not_flushed_for.seconds}, no flush" }
-    #       false
-    #     end
-    #   end
-    #
-    #   # Exit trap: Nothing to flush yet? Abort there.
-    #   if keys_flush.empty?
-    #     Log.info { "no kv store pool items need to be flushed at the moment" }
-    #     return
-    #   end
-    #
-    #   # Step 2: Flush KVs, one-by-one (sequential locking; this avoids global locks)
-    #   count_flushed = 0
-    #
-    #   keys_flush.each do |key, store|
-    #     Log.debug { "kv key: #{key} flush started" }
-    #
-    #     if store.flush.error?
-    #       error "kv key: #{key} flush failed: #{store.flush.error.message}"
-    #     else
-    #       count_flushed += 1
-    #       Log.debug { "kv key: #{key} flush complete" }
-    #       end
-    #
-    #     # Bump 'last flushed' time
-    #     store.last_flushed.write = SystemTime.now
-    #
-    #     # Give a bit of time to other threads before continuing
-    #     Process.yield
-    #   end
-    #
-    #   Log.info { "done scanning for kv store pool items to flush to disk (flushed: #{count_flushed})" }
-    # end
+    def self.flush(force : Bool)
+      Log.debug { "scanning for kv store pool items to flush to disk" }
+
+      count_flushed = 0
+
+      @@store_pool.each do |key, store|
+        store.flush
+        count_flushed += 1
+      end
+
+      # Acquire flush lock, and reference it in context
+      # Notice: this prevents two flush operations to be executed at the same time.
+      # _flush = STORE_FLUSH_LOCK.lock
+
+      # Step 1: List keys to be flushed
+      # keys_flush = STORE_POOL.read!.select do |key, store|
+      #   # Important: be lenient with the system clock going back to a past duration since
+      #   #   we may be running in a virtualized environment where the clock is not guaranteed
+      #   #   to be monotonic. This is done to avoid poisoning associated mutexes by
+      #   #   crashing on unwrap().
+      #   not_flushed_for = store.last_flushed.read.elapsed || Duration::ZERO
+      #
+      #   if force || not_flushed_for >= APP_CONF.store.kv.database.flush_after
+      #     Log.info { "kv key: #{key} not flushed for: #{not_flushed_for.seconds}, may flush" }
+      #     true
+      #   else
+      #     Log.debug { "kv key: #{key} not flushed for: #{not_flushed_for.seconds}, no flush" }
+      #     false
+      #   end
+      # end
+      #
+      # # Exit trap: Nothing to flush yet? Abort there.
+      # if keys_flush.empty?
+      #   Log.info { "no kv store pool items need to be flushed at the moment" }
+      #   return
+      # end
+      #
+      # # Step 2: Flush KVs, one-by-one (sequential locking; this avoids global locks)
+      # count_flushed = 0
+      #
+      # keys_flush.each do |key, store|
+      #   Log.debug { "kv key: #{key} flush started" }
+      #
+      #   if store.flush.error?
+      #     error "kv key: #{key} flush failed: #{store.flush.error.message}"
+      #   else
+      #     count_flushed += 1
+      #     Log.debug { "kv key: #{key} flush complete" }
+      #     end
+      #
+      #   # Bump 'last flushed' time
+      #   store.last_flushed.write = SystemTime.now
+      #
+      #   # Give a bit of time to other threads before continuing
+      #   Process.yield
+      # end
+
+      Log.info { "done scanning for kv store pool items to flush to disk (flushed: #{count_flushed})" }
+    end
     #
     # def dump_action(
     #   action : String,

@@ -257,35 +257,32 @@ module Store
       end
     end
 
-    def batch_flush_bucket(iid : UInt32, oid : String, iid_terms_hashed : StoreKeyerHashedTerms)
+    def batch_flush_bucket(iid : UInt32, oid : String, iid_terms_hashed : Set(UInt32))
       count = 0
 
       Log.debug { "store batch flush bucket: #{iid} with hashed terms: #{iid_terms_hashed}" }
 
       # Delete OID <> IID association
-      # case store.delete_oid_to_iid(oid), store.delete_iid_to_oid(iid), store.delete_iid_to_terms(iid)
-      # when Ok(_), Ok(_), Ok(_)
-      #   # Delete IID from each associated term
-      #   for iid_term in iid_terms_hashed
-      #   if term_iid_iids = store.get_term_to_iids(iid_term)
-      #     if term_iid_iids.includes?(iid)
-      #       count += 1
-      #
-      #       # Remove IID from list of IIDs
-      #       term_iid_iids.retain { |cur_iid| cur_iid != iid }
-      #
-      #       is_ok = if term_iid_iids.empty?
-      #                 store.delete_term_to_iids(iid_term).is_ok
-      #               else
-      #                 store.set_term_to_iids(iid_term, term_iid_iids).is_ok
-      #               end
-      #
-      #       if !is_ok
-      #         return Err(nil)
-      #       end
-      #     end
-      #   end
-      # end
+      if delete_oid_to_iid(oid) && delete_iid_to_oid(iid) && delete_iid_to_terms(iid)
+        # Delete IID from each associated term
+        iid_terms_hashed.each do |iid_term|
+          if term_iid_iids = get_term_to_iids(iid_term)
+            if term_iid_iids.includes?(iid)
+              count += 1
+
+              # Remove IID from list of IIDs
+              term_iid_iids.delete(iid)
+
+              if term_iid_iids.empty?
+                delete_term_to_iids(iid_term)
+              else
+                set_term_to_iids(iid_term, term_iid_iids)
+              end
+
+            end
+          end
+        end
+      end
 
       count
     end
@@ -347,8 +344,8 @@ module Store
 
         # Generate start and end prefix for batch delete (in other words, the minimum
         #   key value possible, and the highest key value possible)
-        key_prefix_start = [key_prefix[0], key_prefix[1], key_prefix[2], key_prefix[3], key_prefix[4], 0, 0, 0, 0]
-        key_prefix_end = [key_prefix[0], key_prefix[1], key_prefix[2], key_prefix[3], key_prefix[4], 255, 255, 255, 255]
+        key_prefix_start = Bytes[key_prefix[0], key_prefix[1], key_prefix[2], key_prefix[3], key_prefix[4], 0, 0, 0, 0]
+        key_prefix_end = Bytes[key_prefix[0], key_prefix[1], key_prefix[2], key_prefix[3], key_prefix[4], 255, 255, 255, 255]
 
         # Batch-delete keys matching range
         batch = RocksDB::WriteBatch.new
@@ -356,8 +353,9 @@ module Store
         batch.delete_range(key_prefix_start, key_prefix_end)
 
         # Commit operation to database
-        if err = store.write_batch(batch)
+        if err = store.write(batch)
           Log.error { "failed in store batch erase bucket: #{@bucket} with error: #{err}" }
+          return err
         else
           # Ensure last key is deleted (as RocksDB end key is exclusive; while
           #   start key is inclusive, we need to ensure the end-of-range key is
@@ -365,12 +363,11 @@ module Store
           store.delete(key_prefix_end)
 
           Log.debug { "succeeded in store batch erase bucket: #{@bucket}" }
-          end
+        end
       end
 
       Log.info { "done processing store batch erase bucket: #{@bucket}" }
 
-      1
     end
 
     def self.encode_u32(decoded : UInt32) : Bytes

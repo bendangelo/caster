@@ -39,14 +39,16 @@ module Caster
     # Teardown Pipe
     Pipe::Listen.teardown
 
+    # finish any writing
+    sleep 1
+
     # Perform a KV flush (ensures all in-memory changes are synced on-disk before shutdown)
-    # Store::KVPool.flush(true)
+    ::Store::KVPool.flush(true)
 
     # Perform a FST consolidation (ensures all in-memory items are synced on-disk before
     #   shutdown; otherwise we would lose all non-consolidated FST changes)
     # StoreFSTPool.consolidate(true)
 
-    sleep 1
     Log.info { "stopped" }
     exit
   end
