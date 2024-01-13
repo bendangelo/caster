@@ -19,6 +19,14 @@ module Pipe
   end
 
   class Handle
+
+    @@client_count = 0
+    CLIENTS_CONNECTED = RWLock.new
+
+    def self.total_clients
+      @@client_count
+    end
+
     CONNECTED_BANNER = "CONNECTED <Caster v1.0.0>"
 
     LINE_END_GAP = 1
@@ -40,7 +48,7 @@ module Pipe
       stream.puts("#{CONNECTED_BANNER}#{LINE_FEED}")
 
       # Increment connected clients count
-      # CLIENTS_CONNECTED.write { |count| count += 1 }
+      CLIENTS_CONNECTED.write { @@client_count += 1 }
 
       # Ensure pipe mode is set
       result = ensure_start(stream)
@@ -58,9 +66,10 @@ module Pipe
       end
 
       # Decrement connected clients count
-      # CLIENTS_CONNECTED.write { |count| count -= 1 }
+      CLIENTS_CONNECTED.write { @@client_count += 1 }
     rescue IO::TimeoutError
       Log.warn { "timeout error channel client peer: #{stream.remote_address}" }
+      CLIENTS_CONNECTED.write { @@client_count -= 1 }
     end
 
     def self.configure_stream(stream, is_established : Bool)

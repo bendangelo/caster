@@ -7,7 +7,8 @@ module Pipe
 
       PIPE_AVAILABLE.set(1)
 
-      server = TCPServer.new(Caster.settings.inet, Caster.settings.port)
+      @@server = server = TCPServer.new(Caster.settings.inet, Caster.settings.port)
+
       while client = server.accept?
         spawn handle_client client
       end
@@ -33,8 +34,14 @@ module Pipe
       # Channel cannot be used anymore
       PIPE_AVAILABLE.set(0)
 
-      # TODO: Set all clients to non-blocking and close
-      # blocking = false
+      server = @@server
+
+      if !server.nil?
+        server.close
+
+        Log.info { "TCP server closed" }
+      end
+
     end
   end
 end

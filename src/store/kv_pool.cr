@@ -108,7 +108,7 @@ module Store
     # end
 
     def self.flush(force : Bool)
-      Log.debug { "scanning for kv store pool items to flush to disk" }
+      Log.info { "scanning for kv store pool items to flush to disk" }
 
       count_flushed = 0
 
