@@ -33,11 +33,10 @@ module Executer
           Log.debug { "got search executor iids: #{iids} for term: #{term}" }
 
           iids.each do |iid|
-            value = token.index_limit.to_i32 - term_index - index
             if found_iids.has_key? iid
-              found_iids[iid] += value
+              found_iids[iid] += token.index_limit.to_i32 - term_index - index
             else
-              found_iids[iid] = value
+              found_iids[iid] = token.index_limit.to_i32 - term_index - index
             end
           end
 
