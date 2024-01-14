@@ -1,6 +1,7 @@
 module Caster
   class Settings
     include YAML::Serializable
+    @@settings_path = "./src/config/settings.yml"
 
     def self.load_from_env!(silent = false)
       if env_pass = ENV["CASTER_PASSWORD"]?
@@ -9,7 +10,7 @@ module Caster
       elsif Caster.settings.auth_password.blank?
         Log.warn { "No password set" } if !silent
       else
-        Log.info { "Password set from settings.yml" } if !silent
+        Log.info { "Password set from settings path" } if !silent
       end
     end
 
@@ -17,8 +18,12 @@ module Caster
       if config = ENV["CASTER_CONFIG"]?
         config
       else
-        "./src/config/settings.yml"
+        @@settings_path
       end
+    end
+
+    def self.settings_path=(value)
+        @@settings_path = value
     end
 
     property log_level : String

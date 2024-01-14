@@ -27,7 +27,7 @@ module Pipe
       @@client_count
     end
 
-    CONNECTED_BANNER = "CONNECTED <Caster v1.0.0>"
+    CONNECTED_BANNER = "CONNECTED <Caster v#{Caster::VERSION}>"
 
     LINE_END_GAP = 1
     BUFFER_SIZE = 20_000

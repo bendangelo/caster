@@ -12,6 +12,7 @@ require "file_utils"
 require "./settings"
 require "./logger"
 require "./store"
+require "./version"
 
 require "../pipe/*"
 require "../pipe/commands/*"
@@ -30,6 +31,9 @@ module Caster
 
   def self.boot(silent = false)
     Caster::Logger.setup
+
+    Log.debug { "Loading settings from #{Caster::Settings.settings_path}" }
+
     Caster::Settings.load_from_env! silent
 
     if Caster.settings.search.term_index_limit > ::Store::MAX_TERM_INDEX_SIZE
