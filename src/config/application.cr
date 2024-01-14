@@ -31,6 +31,10 @@ module Caster
   def self.boot(silent = false)
     Caster::Logger.setup
     Caster::Settings.load_from_env! silent
+
+    if Caster.settings.search.term_index_limit > ::Store::MAX_TERM_INDEX_SIZE
+      Log.error { "set term index size is too large! Check settings.yml. Max size is (#{::Store::MAX_TERM_INDEX_SIZE})" }
+    end
   end
 
   def self.shutdown

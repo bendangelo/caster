@@ -141,6 +141,62 @@ Spectator.describe Store::KVAction do
       expect( action.delete_iid_to_attrs(iid)).to eq true
       expect( action.get_iid_to_attrs(iid)).to eq nil
     end
+
+  end
+
+  describe "#iterate_term_to_iids" do
+    let(collection) { "videos_iterate" }
+    let(bucket) { "all" }
+
+    let(store) do
+      Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
+    end
+    let(action) do
+      Store::KVAction.new(bucket: bucket, store: store)
+    end
+
+    it "iterates through all terms to max" do
+      term = 4_u32
+      iids_1 = Set.new UInt32[1, 1]
+      iids_2 = Set.new UInt32[2, 2]
+
+      action.set_term_to_iids(term, iids_1, 0)
+      action.set_term_to_iids(term, iids_2, 1)
+
+      # high random index
+      action.set_term_to_iids(term, iids_2, 23)
+
+      start_index = 0
+      called = 0
+      action.iterate_term_to_iids(term, start_index.to_u8) do |iids, index|
+        expect(iids).to eq(iids_1) if index == 0
+        expect(iids).to eq(iids_2) if index == 1
+        called += 1
+      end
+      expect(called).to eq 3
+    end
+
+    it "iterates through 1 above terms to 2" do
+      term = 4_u32
+      iids_1 = Set.new UInt32[1, 1]
+      iids_2 = Set.new UInt32[2, 2]
+      iids_3 = Set.new UInt32[3, 3]
+
+      action.set_term_to_iids(term, iids_1, 1)
+      action.set_term_to_iids(term, iids_2, 2)
+      action.set_term_to_iids(term, iids_3, 3)
+
+      start_index = 1
+      length = 2
+      called = 0
+      action.iterate_term_to_iids(term, start_index.to_u8, length) do |iids, index|
+        expect(iids).to eq(iids_1) if index == 1
+        expect(iids).to eq(iids_2) if index == 2
+        expect(index).to_not eq 3
+        called += 1
+      end
+      expect(called).to eq 2
+    end
   end
 
   describe "#batch_erase_bucket" do

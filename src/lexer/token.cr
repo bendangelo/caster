@@ -18,8 +18,19 @@ module Lexer
     @mode : TokenMode
     @locale : Lang
     @text : String
+    property index_limit : UInt8
 
-    def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng)
+    def self.normalize(word)
+      return nil if word.blank?
+      word = word.downcase
+
+      return nil if Lexer::Eng::STOP_WORDS.includes?(word)
+
+      # TODO: use https://snowballstem.org/
+      word.stem
+    end
+
+    def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng, @index_limit : UInt8 = UInt8::MAX)
       # Tokenize words depending on the locale
       # @words = case @locale
       #          when Lang::Cmn
@@ -54,18 +65,17 @@ module Lexer
       yields = Set(TermHash).new
 
       words.each_with_index do |word, index|
-        word = word.downcase
 
-        next if word.blank? || Lexer::Eng::STOP_WORDS.includes?(word)
+        next if !(norm_word = Token.normalize word)
 
-        # TODO: use https://snowballstem.org/
-        word = word.stem
-
-        term_hash = Store::Hasher.to_compact word
+        term_hash = Store::Hasher.to_compact norm_word
 
         if yields.add? term_hash
           Log.debug { "Lexer yielded #{term_hash}" }
-          yield word, term_hash, index
+
+          index = @index_limit if index > @index_limit
+
+          yield norm_word, term_hash, index.to_u8
         else
           Log.debug { "Lexer did not yield #{term_hash} because already in set" }
         end

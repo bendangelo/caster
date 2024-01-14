@@ -16,6 +16,8 @@ search:
   list_limit_default: 5
   list_limit_maximum: 20
 
+  term_index_limit: 10
+
 kv:
   path: "./data/store/kv/"
   pool:

@@ -33,6 +33,20 @@ module Store
       true
     end
 
+    def iterate_over_prefix(prefix : Bytes)
+
+      it = @db.new_binary_iterator
+
+      it.seek(prefix)
+
+      while it.valid?
+        yield it.key, it.value
+        it.next
+      end
+
+      it.close
+    end
+
     def flush
       # TODO: add flush
       Log.error { "flush not added" }

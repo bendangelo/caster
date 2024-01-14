@@ -43,33 +43,33 @@ module Executer
       return if iid.nil?
 
       has_commits = false
-      iid_terms_hashed = kv_action.get_iid_to_terms(iid)
-      if iid_terms_hashed.nil?
-        iid_terms_hashed = Set(UInt32).new
+      terms = kv_action.get_iid_to_terms(iid)
+      if terms.nil?
+        terms = Set(UInt32).new
       end
 
-      Log.info { "got push executor stored iid-to-terms: #{iid_terms_hashed}" }
+      Log.info { "got push executor stored iid-to-terms: #{terms}" }
 
-      token.parse_text do |term, term_hashed|
-        if iid_terms_hashed.add?(term_hashed)
-          term_iids = kv_action.get_term_to_iids(term_hashed)
-          term_iids = term_iids.nil? ? Set(UInt32).new : term_iids
+      token.parse_text do |term, term_hashed, index|
+        if terms.add?(term_hashed)
+          iids = kv_action.get_term_to_iids(term_hashed, index)
+          iids = iids.nil? ? Set(UInt32).new : iids
 
           has_commits = true
 
-          next if !term_iids.add?(iid)
+          next if !iids.add?(iid)
 
           Log.info { "has push executor term-to-iids: #{iid}" }
 
           # truncate_limit = APP_CONF.store.kv.retain_word_objects
           #
-          # if term_iids.size > truncate_limit
+          # if iids.size > truncate_limit
           #   Log.info { "push executor term-to-iids object too long (limit: #{truncate_limit})" }
-          #   term_iids_drain = term_iids.pop(truncate_limit)
+          #   term_iids_drain = iids.pop(truncate_limit)
           #   executor_ensure_op!(kv_action.batch_truncate_object(term_hashed, term_iids_drain))
           # end
 
-          kv_action.set_term_to_iids(term_hashed, term_iids)
+          kv_action.set_term_to_iids(term_hashed, iids, index)
 
         end
 
@@ -80,9 +80,9 @@ module Executer
 
       if has_commits
 
-        Log.info { "has push executor iid-to-terms commits: #{iid_terms_hashed}" }
+        Log.info { "has push executor iid-to-terms commits: #{terms}" }
 
-        kv_action.set_iid_to_terms(iid, iid_terms_hashed)
+        kv_action.set_iid_to_terms(iid, terms)
       end
 
     end

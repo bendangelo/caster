@@ -72,5 +72,7 @@ module Caster
 
     property list_limit_default : Int32
     property list_limit_maximum : Int32
+
+    property term_index_limit : UInt8 = 10
   end
 end

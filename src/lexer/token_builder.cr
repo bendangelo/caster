@@ -76,7 +76,7 @@ module Lexer
                end
 
       # Build final token builder iterator
-      Token.new(mode, text, locale)
+      Token.new(mode, text, locale, Caster.settings.search.term_index_limit)
     end
 
     # private def detect_lang(text : String) : Lang?

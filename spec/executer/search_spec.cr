@@ -4,37 +4,85 @@ Spectator.describe Executer::Search do
   include Executer
 
   describe ".execute" do
-    context "search for two terms with one object having both" do
+    let(collection) { "executer_search" }
+    # make a unique bucket for each spec
+    let(bucket) { query.gsub " ", "_" }
 
-      let(text) { "hello world" }
-      let(collection) { "col" }
-      let(bucket) { "buck" }
-      let(object) { "obj" }
+    let(store) do
+      Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
+    end
+    let(action) do
+      Store::KVAction.new(bucket: bucket, store: store)
+    end
+    let(event_id) { "eventid" }
+    let(item) { Store::Item.new collection, bucket, nil }
+    let(token) { Lexer::Token.new Lexer::TokenMode::NormalizeOnly, query, Lexer::Lang::Eng }
+    let(limit) { 10 }
+    let(offset) { 0 }
+    let(oids) { {} of Symbol => String }
+    let(query) { "" }
 
-      let(store) do
-        Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
+    before do
+      oids.each do |k, v|
+        v.split(" ").each_with_index do |w, i|
+          if word = Lexer::Token.normalize(w)
+            action.add_term_to_iid?(Store::Hasher.to_compact(word), k.to_i.to_u32, i.to_u8 + 1)
+          end
+        end
+
+        action.set_iid_to_oid(k.to_i.to_u32, k.to_s)
       end
-      let(action) do
-        Store::KVAction.new(bucket: bucket, store: store)
-      end
-      let(event_id) { "eventid" }
-      let(item) { Store::Item.new collection, bucket, nil }
-      let(token) { Lexer::Token.new Lexer::TokenMode::NormalizeOnly, text, Lexer::Lang::Eng }
-      let(limit) { 10 }
-      let(offset) { 0 }
-      let(iids) { Set.new UInt32[1] }
-      let(oid) { "helloobject" }
+    end
 
-      before do
-        action.set_term_to_iids(Store::Hasher.to_compact("hello"), iids)
-        action.set_term_to_iids(Store::Hasher.to_compact("world"), iids)
-        action.set_iid_to_oid(1_u32, oid)
-      end
+    context "setup test" do
 
-      it "returns oid of wanted object" do
+      provided query: "nothing in index" do
         result = Search.execute item, event_id, token, limit, offset
-        expect(result.size).to eq 1
-        expect(result[0]).to eq oid
+        expect(result.size).to eq 0
+      end
+    end
+
+    context "find matches with single term" do
+
+      provided query: "hello", oids: {obj1: "today I say hello", obj2: "hello", obj3: "today my world"} do
+        result = Search.execute item, event_id, token, limit, offset
+        expect(result).to eq ["obj2", "obj1"]
+      end
+
+    end
+
+    context "find matches with two terms" do
+      provided query: "hello world", oids: {obj1: "unrelated text", obj2: "hello world - this something", obj3: "the hello world"} do
+        result = Search.execute item, event_id, token, limit, offset
+        expect(result).to eq ["obj2", "obj3"]
+      end
+    end
+
+    context "ignores beginning terms if it is later in the query" do
+      provided query: "Big hamburger store banner", oids: {obj1: "the hamburger", obj2: "store", obj3: "hamburger are made in a store over here", obj4: "banner over here"} do
+        result = Search.execute item, event_id, token, limit, offset
+        # expect(Search.debug).to eq ["obj3", "obj1"]
+        expect(result).to eq ["obj3", "obj1"]
+      end
+    end
+
+    context "matches with more query words ranked higher" do
+      provided query: "Big hamburger store", oids: {obj1: "the hamburger", obj3: "hamburger are made in a store over here"} do
+        result = Search.execute item, event_id, token, limit, offset
+        expect(result).to eq ["obj3", "obj1"]
+      end
+    end
+
+    context "orders matches by word index" do
+      provided query: "toronto canada", oids: {obj1: "canada has toronto inside", obj2: "the toronto maple leafs canada", obj3: "toronto canada is great"} do
+        result = Search.execute item, event_id, token, limit, offset
+        expect(result).to eq ["obj3", "obj1", "obj2"]
+      end
+
+      provided query: "final fantasy", oids: {obj1: "fantasy final", obj2: "final the fantasy", obj3: "finals fantasy", obj4: "the final fantasy", obj5: "my best final making fantasy", obj6: "final fantasy 7"} do
+        result = Search.execute item, event_id, token, limit, offset
+        # expect(Search.debug).to eq ["obj3", "obj6", "obj2", "obj4", "obj5", "obj1"]
+        expect(result).to eq ["obj3", "obj6", "obj1", "obj2", "obj4", "obj5"]
       end
 
     end

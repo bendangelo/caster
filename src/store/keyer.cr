@@ -1,6 +1,7 @@
 module Store
 
   KEY_SIZE = 9
+  MAX_TERM_INDEX_SIZE = 245
 
   alias KeyBytes = Slice(UInt8)
   alias KeyPrefix = Slice(UInt8)
@@ -14,11 +15,13 @@ module Store
   enum Idx
     # don't change order
     MetaToValue = 0 #(MetaKey),
-      TermToIIDs = 1#(TermHashed),
-      OIDToIID = 2#(ObjectOID),
-      IIDToOID = 3#(ObjectIID),
-      IIDToTerms = 4#(ObjectIID)
-      IIDToAttrs = 5#(ObjectIID)
+    OIDToIID = 1#(ObjectOID),
+    IIDToOID = 2#(ObjectIID),
+    IIDToTerms = 3#(ObjectIID)
+    IIDToAttrs = 4#(ObjectIID)
+    # leave buffer for new entries
+    TermToIIDs = 10#(TermHashed),
+    # rest are for term indexes
   end
 
   struct Keyer
@@ -48,10 +51,10 @@ module Store
       Keyer.new(build_key(Idx::MetaToValue.value.to_u8, bucket, route))
     end
 
-    def self.term_to_iids(bucket : String, term_hash : TermHash) : Keyer
+    def self.term_to_iids(bucket : String, term_hash : TermHash, index : UInt8 = 0) : Keyer
       route = term_hash
 
-      Keyer.new(build_key(Idx::TermToIIDs.value.to_u8, bucket, route))
+      Keyer.new(build_key(Idx::TermToIIDs.value.to_u8 + index, bucket, route))
     end
 
     def self.oid_to_iid(bucket : String, oid : String) : Keyer

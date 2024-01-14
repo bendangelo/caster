@@ -35,8 +35,8 @@ Spectator.describe Executer::Push do
       end
 
       it "associates iid to all terms" do
-        expect(action.get_term_to_iids(Store::Hasher.to_compact("hello"))).to eq Set.new UInt32[1]
-        expect(action.get_term_to_iids(Store::Hasher.to_compact("world"))).to eq Set.new UInt32[1]
+        expect(action.get_term_to_iids(Store::Hasher.to_compact("hello"), 0)).to eq Set.new UInt32[1]
+        expect(action.get_term_to_iids(Store::Hasher.to_compact("world"), 1)).to eq Set.new UInt32[1]
       end
 
     end

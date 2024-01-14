@@ -1,6 +1,12 @@
 module Executer
   class Search
-    def self.execute(store : Store::Item, event_id : String, lexer : Lexer::Token, limit : Int32, offset : Int32)
+    @@debug = [] of String
+    def self.debug
+      @@debug
+    end
+
+    def self.execute(store : Store::Item, event_id : String, token : Lexer::Token, limit : Int32, offset : Int32)
+      @@debug.clear
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
@@ -21,11 +27,26 @@ module Executer
       # fst_action = StoreFSTActionBuilder.access(fst_store)
 
       found_iids = Set(UInt32).new
+      positions = Hash(UInt32, Array(Int32)).new
 
-      lexer.parse_text do |term, term_hashed, index|
-        iids = kv_action.get_term_to_iids(term_hashed)
+      token.parse_text do |term, term_hashed, index|
+        kv_action.iterate_term_to_iids(term_hashed, index, token.index_limit) do |iids, term_index|
 
-        next if iids.nil?
+          Log.debug { "got search executor iids: #{iids} for term: #{term}" }
+
+          iids.each do |iid|
+            positions[iid] ||= [] of Int32
+            positions[iid] << token.index_limit - term_index - index
+          end
+
+          if found_iids.empty?
+            found_iids = iids
+          else
+            found_iids = found_iids + iids
+          end
+        end
+
+        # next if iids.nil?
         # higher_limit = APP_CONF.store.kv.retain_word_objects
         # alternates_try = APP_CONF.channel.search.query_alternates_try
         #
@@ -61,19 +82,23 @@ module Executer
         #     end
         # end
 
-        Log.debug { "got search executor iids: #{iids} for term: #{term}" }
-
-        if found_iids.empty?
-          found_iids = iids
-        else
-          found_iids = found_iids | iids
-        end
+        # Log.debug { "got search executor iids: #{iids} for term: #{term}" }
+        #
+        # if found_iids.empty?
+        #   found_iids = iids
+        # else
+        #   found_iids = found_iids | iids
+        # end
 
         Log.debug { "got search executor iid intersection: #{found_iids} for term: #{term}" }
 
-        if found_iids.size > limit
-          break
-        end
+        # if found_iids.size > limit
+        #   break
+        # end
+      end
+
+      found_iids = found_iids.to_a.sort_by do |iid|
+        -positions[iid].sum
       end
 
       # TODO: add offset
@@ -82,6 +107,7 @@ module Executer
 
         if oid = kv_action.get_iid_to_oid(found_iid)
           result_oids << oid
+          @@debug << "#{oid} #{-positions[found_iid].sum} #{positions[found_iid].size}"
         else
           Log.error { "failed getting search executor iid-to-oid" }
         end

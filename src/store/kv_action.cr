@@ -50,9 +50,9 @@ module Store
     # Term-to-IIDs mapper
     #
     # [IDX=1] ((term)) ~> [((iid))]
-    def get_term_to_iids(term_hashed : TermHash)
+    def get_term_to_iids(term_hashed : TermHash, index : UInt8 = 0)
       if store
-        store_key = Keyer.term_to_iids(@bucket, term_hashed)
+        store_key = Keyer.term_to_iids(@bucket, term_hashed, index)
 
         Log.debug { "store get term-to-iids: #{store_key}" }
 
@@ -76,9 +76,74 @@ module Store
       end
     end
 
-    def set_term_to_iids(term_hashed : TermHash, iids : Set(UInt32))
+    def iterate_term_to_iids(term_hashed : TermHash, start_index : UInt8 = 0, length = MAX_TERM_INDEX_SIZE)
+
+      length = MAX_TERM_INDEX_SIZE if length > Store::MAX_TERM_INDEX_SIZE
+
+      Log.debug { "store iterate term-to-iids: #{term_hashed} #{start_index}" }
+
+      start_index.upto(length) do |i|
+
+        # store.iterate_over_prefix(key_prefix) do |key, value|
+        iids = get_term_to_iids(term_hashed, i.to_u8)
+        if iids
+          yield iids, i
+        end
+      end
+      #
+      # store_key = Keyer.term_to_iids(@bucket, term_hashed, start_index)
+      #
+      # # store.iterate_over_prefix(key_prefix) do |key, value|
+      #   decoded_iids = KVAction.decode_u32_set(value)
+      #   if decoded_iids
+      #     Log.debug { "got term-to-iids: #{store_key} with decoded value: #{decoded_iids}" }
+      #     yield decoded_iids
+      #   end
+      # # end
+
+      # if value = store.get?(store_key.as_bytes)
+      #   Log.debug { "iterate term-to-iids: #{store_key} with encoded value: #{value}" }
+      #
+      #   decoded_iids = KVAction.decode_u32_set(value)
+      #
+      #   if decoded_iids
+      #     Log.debug { "got term-to-iids: #{store_key} with decoded value: #{decoded_iids}" }
+      #     decoded_iids
+      #   else
+      #     nil
+      #   end
+      # else
+      #   Log.debug { "no term-to-iids found: #{store_key}" }
+      #   nil
+      # end
+    end
+
+    def add_term_to_iid?(term_hashed : TermHash, iid : UInt32, index : UInt8 = 0)
       if store
-        store_key = Keyer.term_to_iids(@bucket, term_hashed)
+        store_key = Keyer.term_to_iids(@bucket, term_hashed, index)
+
+        Log.debug { "store set term-to-iids: #{store_key}" }
+
+        iids = get_term_to_iids(term_hashed, index) || Set(UInt32).new
+
+        if iids.add? iid
+          iids_encoded = KVAction.encode_u32_set(iids)
+
+          Log.debug { "store set term-to-iids: #{store_key} with encoded value: #{iids_encoded}" }
+
+          store.put(store_key.as_bytes, iids_encoded)
+          true
+        else
+          false
+        end
+      else
+        false
+      end
+    end
+
+    def set_term_to_iids(term_hashed : TermHash, iids : Set(UInt32), index : UInt8 = 0)
+      if store
+        store_key = Keyer.term_to_iids(@bucket, term_hashed, index)
 
         Log.debug { "store set term-to-iids: #{store_key}" }
 
