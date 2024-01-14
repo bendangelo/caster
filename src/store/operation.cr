@@ -27,8 +27,6 @@ module Store
         when Query::Type::Suggest
           Executer::Suggest.execute(query.item, query.query_id, query.token, query.limit)
             .join " "
-        when Query::Type::Push
-          Executer::Push.execute(query.item, query.token)
         when Query::Type::Pop
           Executer::Pop.execute(query.item, query.token).to_s
         else

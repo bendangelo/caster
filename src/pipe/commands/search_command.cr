@@ -21,6 +21,9 @@ module Pipe
         else
           Log.info { "will search for ##{event_id} with text: #{text}, limit: #{query_limit}, offset: #{query_offset}, locale: <#{query_lang}>" }
 
+          # results = Executer::Search.execute(query.item, query.query_id, query.token, query.limit, query.offset)
+          #   .join(" ")
+
           # Commit 'search' query
           BaseCommand.commit_pending_operation(
             "QUERY", event_id, Query::Builder.search(

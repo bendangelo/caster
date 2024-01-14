@@ -12,6 +12,7 @@ module Pipe
 
         # Parse meta parts (meta comes after text; extract meta parts second)
         push_lang = BaseCommand.parse_meta parts, "LANG"
+        push_attrs = BaseCommand.parse_attrs parts, "ATTR"
 
         if text.blank?
           CommandResult.error CommandError::InvalidFormat, "text is blank"
@@ -19,10 +20,19 @@ module Pipe
           Log.info { "will push for text: #{text} with hinted locale: #{push_lang}" }
 
           # Commit 'push' query
-          return BaseCommand.commit_ok_operation Query::Builder.push(collection, bucket, object, text, push_lang)
+          item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
+          mode, hinted_lang = Lexer::TokenBuilder.from_query_lang push_lang
+          token = Lexer::TokenBuilder.from(mode, text, hinted_lang)
+
+          return CommandResult.error :query_error if item.is_a? Store::ItemError
+          return CommandResult.error :query_error if token.nil?
+
+          Executer::Push.execute item, token, push_attrs
+
+          return CommandResult.ok
         end
       else
-        CommandResult.error CommandError::InvalidFormat, "PUSH <collection> <bucket> <object> [LANG value]? -- <text>"
+        CommandResult.error CommandError::InvalidFormat, "PUSH <collection> <bucket> <object> [LANG value]? [ATTR val1,val2,..]? -- <text>"
       end
     end
 

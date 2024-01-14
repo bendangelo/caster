@@ -10,6 +10,7 @@ Spectator.describe Executer::Push do
       let(collection) { "col" }
       let(bucket) { "buck" }
       let(object) { "push_obj" }
+      let(attrs) { UInt16[0, 1] }
 
       let(store) do
         Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
@@ -21,13 +22,17 @@ Spectator.describe Executer::Push do
       let(token) { Lexer::Token.new Lexer::TokenMode::NormalizeOnly, text, Lexer::Lang::Eng }
 
       before do
-        Push.execute item, token
+        Push.execute item, token, attrs
       end
 
       it "associated oid to iid and iid to oid for object" do
         expect(action.get_oid_to_iid(object)).to eq 1
         expect(action.get_iid_to_oid(1)).to eq object
         expect(action.get_meta_to_value(Store::IIDIncr)).to eq 1
+      end
+
+      it "associates all attrs to iid" do
+        expect(action.get_iid_to_attrs(1)).to eq attrs
       end
 
       it "associates all terms to iid" do

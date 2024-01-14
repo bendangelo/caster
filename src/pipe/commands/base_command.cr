@@ -46,7 +46,7 @@ module Pipe
       CommandResult.new ResponseType::Ok
     end
 
-    def self.error(error, value = "") : CommandResult
+    def self.error(error : CommandError, value = "") : CommandResult
       CommandResult.new ResponseType::Err, value, error
     end
 
@@ -99,83 +99,17 @@ module Pipe
       parts[index + 1]? || if_none
     end
 
-    # def self.parse_text_parts(parts : Array(String)) : String?
-    #   text = String.new
-    #
-    #   parts.each do |text_part|
-    #     text += " " unless text.empty?
-    #
-    #     text += text_part
-    #
-    #     if text.size > 1 && text[-1] == TEXT_PART_BOUNDARY
-    #       count_escapes = 0
-    #
-    #       if text.size > 1
-    #         (text.size - 2).downto(0) do |index|
-    #           break if text[index] != TEXT_PART_ESCAPE
-    #
-    #           count_escapes += 1
-    #         end
-    #       end
-    #
-    #       if count_escapes == 0 || (count_escapes % 2 == 0)
-    #         break
-    #       end
-    #     end
-    #   end
-    #
-    #   if text.empty? || text.size < 2 || text[0] != TEXT_PART_BOUNDARY ||
-    #       text[-1] != TEXT_PART_BOUNDARY
-    #     Log.error { "could not properly parse text parts: #{text}" }
-    #     nil
-    #   else
-    #     Log.info { "parsed text parts (still needs post-processing): (#{text})" }
-    #
-    #     text_inner = text[1..text.size - 2]
-    #
-    #     text_inner_string = Utils.unescape(text_inner)
-    #
-    #     Log.info { "parsed text parts (post-processed): (#{text_inner_string})" }
-    #
-    #     text_inner_string.blank? ? nil : text_inner_string
-    #   end
-    # end
-    #
-    # def self.parse_next_meta_parts(parts : Array(String)) : Tuple(ResponseType, String, String)
-    #   part = parts.shift?
-    #
-    #   if part
-    #     if !part.empty?
-    #       index_open = part.index(META_PART_GROUP_OPEN)
-    #
-    #       if index_open
-    #         key_bound_start = 0
-    #         key_bound_end = index_open
-    #         value_bound_start = index_open + 1
-    #         value_bound_end = part.size - 1
-    #
-    #         if part[value_bound_end].ord.to_char == META_PART_GROUP_CLOSE
-    #           key = part[key_bound_start..key_bound_end]
-    #           value = part[value_bound_start..value_bound_end]
-    #
-    #           unless key.include?(META_PART_GROUP_OPEN) || key.include?(META_PART_GROUP_CLOSE) ||
-    #               value.include?(META_PART_GROUP_OPEN) || value.include?(META_PART_GROUP_CLOSE)
-    #             Log.debug { "parsed meta part as: #{key} = #{value}" }
-    #             return {ResponseType::Ok, key, value}
-    #           else
-    #             Log.debug { "parsed meta part, but it contains reserved characters: #{key} = #{value}" }
-    #             return {ResponseType::Err, key, value}
-    #           end
-    #         end
-    #       end
-    #     end
-    #
-    #     Log.error { "could not parse meta part: #{part}" }
-    #     {ResponseType::Err, "?", part}
-    #   else
-    #     nil
-    #   end
-    # end
+    def self.parse_attrs(parts, key, if_none = nil)
+      index = parts.index(key)
+
+      return if_none if index.nil?
+
+      value = parts[index + 1]? || if_none
+
+      return value if value.nil?
+
+      value.split(",").map {|i| i.to_u16 }
+    end
 
     def self.commit_ok_operation(query) : CommandResult
       return CommandResult.error CommandError::QueryError if query.nil?

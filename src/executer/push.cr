@@ -1,6 +1,6 @@
 module Executer
   class Push
-    def self.execute(item : Store::Item, token : Lexer::Token)
+    def self.execute(item : Store::Item, token : Lexer::Token, attrs : Array(UInt16)?)
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
 
@@ -46,6 +46,10 @@ module Executer
       terms = kv_action.get_iid_to_terms(iid)
       if terms.nil?
         terms = Set(UInt32).new
+      end
+
+      if !attrs.nil?
+        kv_action.set_iid_to_attrs(iid, attrs)
       end
 
       Log.info { "got push executor stored iid-to-terms: #{terms}" }
