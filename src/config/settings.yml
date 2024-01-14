@@ -1,4 +1,4 @@
-log_level: "debug"
+log_level: "warn"
 colorize: true
 
 inet: "localhost"

@@ -5,8 +5,19 @@ Text search engine
 ## Installation
 
 ```
+# Clone RocksDB
+git clone https://github.com/facebook/rocksdb.git && cd rocksdb
+
+# Build RocksDB
+DEBUG_LEVEL=0 make shared_lib
+
+# Install RocksDB so that Desmos can access it
+sudo make install-shared
+
+# Make sure the newly built library is linked correctly
+sudo ldconfig
+
 curl -fsSL https://crystal-lang.org/install.sh | sudo bash
-sudo apt-get -y install librocksdb-dev
 curl -fsSLo- https://raw.githubusercontent.com/samueleaton/sentry/master/install.cr | crystal eval
 ./sentry
 ```

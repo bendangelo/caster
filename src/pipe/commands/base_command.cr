@@ -209,7 +209,7 @@ module Pipe
       end
 
       return CommandResult.new(:pending, query_id),
-        CommandResult.new(type: ResponseType::Event, value: event_value)
+        CommandResult.new(type: :event, value: event_value)
     end
 
   end
