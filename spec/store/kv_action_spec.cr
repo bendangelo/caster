@@ -104,9 +104,13 @@ Spectator.describe Store::KVAction do
     it "term to iids" do
       expect( action.get_term_to_iids(1)).to eq nil
       expect( action.set_term_to_iids(1_u32, Set.new UInt32[0, 1, 2])).to eq nil
+      expect( action.set_term_to_iids(1_u32, Set.new(UInt32[0, 1, 2]), 1)).to eq nil
       expect( action.get_term_to_iids(1)).to eq Set.new UInt32[0, 1, 2]
+      expect( action.get_term_to_iids(1, 1)).to eq Set.new UInt32[0, 1, 2]
       expect( action.delete_term_to_iids(1)).to eq true
+      expect( action.delete_term_to_iids(1, 1)).to eq true
       expect( action.get_term_to_iids(1)).to eq nil
+      expect( action.get_term_to_iids(1, 1)).to eq nil
     end
 
     it "oid to iid" do
@@ -250,15 +254,18 @@ Spectator.describe Store::KVAction do
       action.set_iid_to_oid(iid, object)
       action.set_iid_to_terms(iid, Set{term})
       action.set_term_to_iids(term, Set{iid})
+      action.set_term_to_iids(term, Set{iid}, 1)
     end
 
     it "deletes term to iids" do
 
       expect(action.get_term_to_iids(term)).to eq Set{iid}
+      expect(action.get_term_to_iids(term, 1)).to eq Set{iid}
 
-      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 1
+      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 2
 
       expect(action.get_term_to_iids(term)).to eq nil
+      expect(action.get_term_to_iids(term, 1)).to eq nil
       expect(action.get_oid_to_iid(object)).to eq nil
       expect(action.get_iid_to_oid(iid)).to eq nil
       expect(action.get_iid_to_terms(iid)).to eq nil
@@ -267,10 +274,12 @@ Spectator.describe Store::KVAction do
 
     it "keeps terms for other iids" do
       action.set_term_to_iids(term, Set{iid, other_iid})
+      action.set_term_to_iids(term, Set{iid, other_iid}, 1)
 
-      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 1
+      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 2
 
       expect(action.get_term_to_iids(term)).to eq Set{other_iid}
+      expect(action.get_term_to_iids(term, 1)).to eq Set{other_iid}
     end
   end
 end

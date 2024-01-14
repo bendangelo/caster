@@ -157,9 +157,9 @@ module Store
       end
     end
 
-    def delete_term_to_iids(term_hashed : TermHash)
+    def delete_term_to_iids(term_hashed : TermHash, index : UInt8 = 0)
       if store
-        store_key = Keyer.term_to_iids(@bucket, term_hashed)
+        store_key = Keyer.term_to_iids(@bucket, term_hashed, index)
 
         Log.debug { "store delete term-to-iids: #{store_key}" }
 
@@ -380,19 +380,23 @@ module Store
 
       # Delete OID <> IID association
       if delete_oid_to_iid(oid) && delete_iid_to_oid(iid) && delete_iid_to_terms(iid)
+
+        # are optional
+        delete_iid_to_attrs(iid)
+
         # Delete IID from each associated term
         iid_terms_hashed.each do |iid_term|
-          if term_iid_iids = get_term_to_iids(iid_term)
-            if term_iid_iids.includes?(iid)
+          iterate_term_to_iids(iid_term) do |iids, index|
+            if iids.includes?(iid)
               count += 1
 
               # Remove IID from list of IIDs
-              term_iid_iids.delete(iid)
+              iids.delete(iid)
 
-              if term_iid_iids.empty?
-                delete_term_to_iids(iid_term)
+              if iids.empty?
+                delete_term_to_iids(iid_term, index)
               else
-                set_term_to_iids(iid_term, term_iid_iids)
+                set_term_to_iids(iid_term, iids, index)
               end
 
             end
