@@ -30,11 +30,11 @@ shards build --release
 
 ## Development
 
+For auto running specs:
+
 ```
 ./sentry -r "crystal" --run-args "spec --debug" -w "./spec/**/*" -w "./src/**/*" 
 ```
-
-## Deployment
 
 ```
 ENV["CASTER_CONFIG"] = ./path/settings.yml
@@ -42,6 +42,13 @@ ENV["CASTER_PASSWORD"] = password
 
 shards build --release -Dpreview_mt
 ./bin/caster CRYSTAL_WORKERS=4 # number of cpu cores
+```
+
+## Deployment
+
+```
+docker build -t registry.gitlab.com/bendangelo/caster .
+docker push registry.gitlab.com/bendangelo/caster
 ```
 
 ## Contributing
