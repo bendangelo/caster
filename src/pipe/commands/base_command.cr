@@ -208,8 +208,8 @@ module Pipe
         event_value = "#{query_type} #{query_id} #{results}"
       end
 
-      return CommandResult.new(:pending, query_id),
-        CommandResult.new(type: :event, value: event_value)
+      # return CommandResult.new(:pending, query_id),
+      CommandResult.new(type: :event, value: event_value)
     end
 
   end

@@ -255,6 +255,7 @@ Spectator.describe Store::KVAction do
       action.set_iid_to_terms(iid, Set{term})
       action.set_term_to_iids(term, Set{iid})
       action.set_term_to_iids(term, Set{iid}, 1)
+      action.set_iid_to_attrs(iid, UInt16[1, 1])
     end
 
     it "deletes term to iids" do
@@ -269,6 +270,7 @@ Spectator.describe Store::KVAction do
       expect(action.get_oid_to_iid(object)).to eq nil
       expect(action.get_iid_to_oid(iid)).to eq nil
       expect(action.get_iid_to_terms(iid)).to eq nil
+      expect(action.get_iid_to_attrs(iid)).to eq nil
 
     end
 
