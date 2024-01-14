@@ -6,7 +6,6 @@ module Executer
     end
 
     def self.execute(store : Store::Item, event_id : String, token : Lexer::Token, limit : Int32, offset : Int32)
-      @@debug.clear
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
@@ -26,8 +25,7 @@ module Executer
       kv_action = Store::KVAction.new(bucket: bucket, store: kv_store)
       # fst_action = StoreFSTActionBuilder.access(fst_store)
 
-      found_iids = Set(UInt32).new
-      positions = Hash(UInt32, Array(Int32)).new
+      found_iids = Hash(UInt32, Int32).new
 
       token.parse_text do |term, term_hashed, index|
         kv_action.iterate_term_to_iids(term_hashed, index, token.index_limit) do |iids, term_index|
@@ -35,15 +33,14 @@ module Executer
           Log.debug { "got search executor iids: #{iids} for term: #{term}" }
 
           iids.each do |iid|
-            positions[iid] ||= [] of Int32
-            positions[iid] << token.index_limit - term_index - index
+            value = token.index_limit - term_index - index
+            if found_iids.has_key? iid
+              found_iids[iid] += value
+            else
+              found_iids[iid] = value
+            end
           end
 
-          if found_iids.empty?
-            found_iids = iids
-          else
-            found_iids = found_iids + iids
-          end
         end
 
         # next if iids.nil?
@@ -97,17 +94,17 @@ module Executer
         # end
       end
 
-      found_iids = found_iids.to_a.sort_by do |iid|
-        -positions[iid].sum
+      sorted_iids = found_iids.to_a.sort_by do |k, v|
+        -v # in reverse
       end
 
       # TODO: add offset
-      found_iids.each_with_index do |found_iid, index|
+      sorted_iids.each_with_index do |(iid, value), index|
         break if index >= limit
 
-        if oid = kv_action.get_iid_to_oid(found_iid)
+        if oid = kv_action.get_iid_to_oid(iid)
           result_oids << oid
-          @@debug << "#{oid} #{-positions[found_iid].sum} #{positions[found_iid].size}"
+          # @@debug << "#{oid} #{-positions[iid].sum} #{positions[iid].size}"
         else
           Log.error { "failed getting search executor iid-to-oid" }
         end
