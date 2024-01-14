@@ -2,9 +2,7 @@ require "option_parser"
 
 OptionParser.parse do |parser|
 
-  parser.on "-c", "--config", "Set config file path" do |path|
-    # bug, just take argv for now
-    path = ARGV[1]
+  parser.on "-c", "--config=PATH", "Set config file path" do |path|
     # puts "given config path (#{path})"
     Caster::Settings.settings_path = path
   end

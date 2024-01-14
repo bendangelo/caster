@@ -64,6 +64,7 @@ module Caster
     property max_flushes : Int32
     property write_buffer : Int32
     property write_ahead_log : Bool
+    property target_file_size_base : Int32
   end
 
   class SearchSettings

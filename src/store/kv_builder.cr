@@ -31,8 +31,10 @@ module Store
       db_options.set_create_if_missing(1)
       db_options.set_use_fsync(0)
       db_options.optimize_level_style_compaction(1)
+      db_options.set_info_log_level(2)
       # db_options.set_min_write_buffer_number(1) # not in library
       db_options.set_max_write_buffer_number(2)
+      db_options.set_target_file_size_base(Caster.settings.kv.database.target_file_size_base * 1024)
 
       # Set dynamic options
       # db_options.compression_type = Caster::Settings.kv.database.compress ? DBCompressionType::Zstd : DBCompressionType::None
