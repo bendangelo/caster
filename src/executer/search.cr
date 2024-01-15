@@ -11,12 +11,12 @@ module Executer
       # general_fst_access_lock_read!
       bucket = store.bucket
 
-      result_oids = Array(String).new limit
-
       if bucket.nil?
         Log.error { "bucket is nil" }
-        return result_oids
+        return [] of String
       end
+
+      result_oids = Array(String).new limit
 
       kv_store = Store::KVPool.acquire(Store::KVAcquireMode::OpenOnly, store.collection)
       # StoreFSTPool.acquire(collection, bucket)

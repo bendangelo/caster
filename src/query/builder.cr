@@ -29,26 +29,6 @@ module Query
   end
 
   class Builder
-    def self.search(
-      query_id : String,
-      collection : String,
-      bucket : String,
-      text : String,
-      limit : Int32,
-      offset : Int32,
-      lang_code : String? = nil
-    ) : ResultLexer?
-      item = Store::ItemBuilder.from_depth_2(collection, bucket)
-
-      mode, hinted_lang = Lexer::TokenBuilder.from_query_lang lang_code
-      text_lexed = Lexer::TokenBuilder.from(mode, text, hinted_lang)
-
-      return nil if item.is_a? Store::ItemError
-      return nil if text_lexed.nil?
-
-      ResultLexer.new Type::Search, item, text_lexed, query_id, limit, offset
-    end
-
     def self.suggest(
       query_id : String,
       collection : String,

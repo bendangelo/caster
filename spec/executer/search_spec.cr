@@ -19,12 +19,14 @@ Spectator.describe Executer::Search do
     let(limit) { 10 }
     let(offset) { 0 }
     let(oids) { {} of Symbol => String }
+    let(attrs) { {} of Symbol => Array(UInt32) }
     let(query) { "" }
     let(greater_than) { nil }
     let(less_than) { nil }
     let(equal) { nil }
 
     before do
+
       oids.each do |k, v|
         v.split(" ").each_with_index do |w, i|
           if word = Lexer::Token.normalize(w)
@@ -34,7 +36,28 @@ Spectator.describe Executer::Search do
 
         action.set_iid_to_oid(k.to_i.to_u32, k.to_s)
       end
+
+      attrs.each do |k, v|
+        action.set_iid_to_attrs(k.to_i.to_u32, v)
+      end
     end
+
+    after do
+      action.delete_iid_to_oid(:obj1.to_i.to_u32)
+      action.delete_iid_to_attrs(:obj1.to_i.to_u32)
+      action.delete_iid_to_oid(:obj2.to_i.to_u32)
+      action.delete_iid_to_attrs(:obj2.to_i.to_u32)
+      action.delete_iid_to_oid(:obj3.to_i.to_u32)
+      action.delete_iid_to_attrs(:obj3.to_i.to_u32)
+      action.delete_iid_to_oid(:obj4.to_i.to_u32)
+      action.delete_iid_to_attrs(:obj4.to_i.to_u32)
+      action.delete_iid_to_oid(:obj5.to_i.to_u32)
+      action.delete_iid_to_attrs(:obj5.to_i.to_u32)
+      action.delete_iid_to_oid(:obj6.to_i.to_u32)
+      action.delete_iid_to_attrs(:obj6.to_i.to_u32)
+    end
+
+    subject(results) { Search.execute item, token, limit, offset, greater_than, less_than, equal }
 
     context "setup test" do
 
@@ -42,6 +65,22 @@ Spectator.describe Executer::Search do
         result = Search.execute item, token, limit, offset
         expect(result.size).to eq 0
       end
+    end
+
+    context "gt, lt, eq" do
+
+      provided less_than: {0_u32, 2_u32}, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+        expect(results).to eq ["obj2", "obj1"]
+      end
+
+      provided greater_than: {0_u32, 0_u32}, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+        expect(results).to eq ["obj3", "obj1"]
+      end
+
+      provided equal: {0_u32, 2_u32}, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+        expect(results).to eq ["obj3"]
+      end
+
     end
 
     context "limit and offset" do
