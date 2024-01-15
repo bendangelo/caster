@@ -6,9 +6,9 @@ module Pipe
 
       if collection && bucket && text
         # Generate command identifier
-        event_id = BaseCommand.generate_event_id
+        # event_id = BaseCommand.generate_event_id
 
-        Log.info { "dispatching search query ##{event_id} on collection: #{collection} and bucket: #{bucket}" }
+        Log.info { "dispatching search query on collection: #{collection} and bucket: #{bucket}" }
 
         # Define query parameters
 
@@ -16,20 +16,32 @@ module Pipe
         query_offset = BaseCommand.parse_meta(parts, "OFFSET", 0).to_i
         query_lang = BaseCommand.parse_meta parts, "LANG"
 
+        greater_than = BaseCommand.parse_filter parts, "GT"
+        less_than = BaseCommand.parse_filter parts, "LT"
+        equal = BaseCommand.parse_filter parts, "EQ"
+
         if query_limit < 1 || query_limit > Caster.settings.search.query_limit_maximum
           return CommandResult.error CommandError::PolicyReject, "LIMIT out of minimum/maximum bounds"
         else
-          Log.info { "will search for ##{event_id} with text: #{text}, limit: #{query_limit}, offset: #{query_offset}, locale: <#{query_lang}>" }
+          Log.info { "will search for with text: #{text}, limit: #{query_limit}, offset: #{query_offset}, locale: <#{query_lang}>" }
 
-          # results = Executer::Search.execute(query.item, query.query_id, query.token, query.limit, query.offset)
-          #   .join(" ")
+          item = Store::ItemBuilder.from_depth_2(collection, bucket)
 
-          # Commit 'search' query
-          BaseCommand.commit_pending_operation(
-            "QUERY", event_id, Query::Builder.search(
-              event_id, collection, bucket, text, query_limit, query_offset, query_lang
-            )
-          )
+          mode, hinted_lang = Lexer::TokenBuilder.from_query_lang query_lang
+          token = Lexer::TokenBuilder.from(mode, text, hinted_lang)
+
+          return CommandResult.error :query_error if item.is_a? Store::ItemError
+          return CommandResult.error :query_error if token.nil?
+
+          results = Executer::Search.execute(item, token, query_limit, query_offset, greater_than, less_than, equal)
+
+          if results.empty?
+            event_value = "QUERY"
+          else
+            event_value = "QUERY #{results.join(" ")}"
+          end
+
+          return CommandResult.new(type: :event, value: event_value)
         end
       else
         return CommandResult.error CommandError::InvalidFormat, "QUERY <collection> <bucket> [LIMIT <count>]? [OFFSET <count>]? [LANG <locale>]? -- <terms>"

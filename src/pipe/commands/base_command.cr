@@ -111,6 +111,20 @@ module Pipe
       value.split(",").map {|i| i.to_u32 }
     end
 
+    def self.parse_filter(parts, key, if_none = nil)
+      index = parts.index(key)
+
+      return if_none if index.nil?
+
+      value = parts[index + 1]? || if_none
+
+      return value if value.nil?
+
+      partition = value.partition(",").map {|i| i.to_u32 }
+
+      {partition[0]?, partition[2]?}
+    end
+
     def self.commit_ok_operation(query) : CommandResult
       return CommandResult.error CommandError::QueryError if query.nil?
 

@@ -61,7 +61,7 @@ module Lexer
     end
 
     def parse_text
-      words = @text.split(/\W+/)
+      words = @text.split(/[^A-Za-z0-9]+/)
       yields = Set(TermHash).new
 
       words.each_with_index do |word, index|

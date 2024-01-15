@@ -5,7 +5,7 @@ module Executer
       @@debug
     end
 
-    def self.execute(store : Store::Item, event_id : String, token : Lexer::Token, limit : Int32, offset : Int32)
+    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, greater_than : Tuple(UInt32, UInt32)? = nil, less_than : Tuple(UInt32, UInt32)? = nil, equal : Tuple(UInt32, UInt32)? = nil)
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!

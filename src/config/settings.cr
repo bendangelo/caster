@@ -80,5 +80,6 @@ module Caster
     property list_limit_maximum : Int32
 
     property term_index_limit : UInt8 = 10
+    property popularity_weight : UInt8 = 30
   end
 end

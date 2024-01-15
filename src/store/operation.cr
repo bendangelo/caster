@@ -21,9 +21,6 @@ module Store
         end
       else
         case query.type
-        when Query::Type::Search
-          Executer::Search.execute(query.item, query.query_id, query.token, query.limit, query.offset)
-            .join(" ")
         when Query::Type::Suggest
           Executer::Suggest.execute(query.item, query.query_id, query.token, query.limit)
             .join " "
