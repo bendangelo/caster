@@ -42,6 +42,20 @@ Spectator.describe Executer::Search do
       end
     end
 
+    context "limit and offset" do
+
+      provided offset: 0, limit: 2, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"} do
+        result = Search.execute item, event_id, token, limit, offset
+        expect(result).to eq ["obj2", "obj3"]
+      end
+
+      provided offset: 1, limit: 2, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"} do
+        result = Search.execute item, event_id, token, limit, offset
+        expect(result).to eq ["obj3", "obj1"]
+      end
+
+    end
+
     context "find matches with single term" do
 
       provided query: "hello", oids: {obj1: "today I say hello", obj2: "hello", obj3: "today my world"} do

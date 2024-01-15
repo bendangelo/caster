@@ -78,28 +78,16 @@ module Executer
         #     end
         # end
 
-        # Log.debug { "got search executor iids: #{iids} for term: #{term}" }
-        #
-        # if found_iids.empty?
-        #   found_iids = iids
-        # else
-        #   found_iids = found_iids | iids
-        # end
-
         Log.debug { "got search executor iid intersection: #{found_iids} for term: #{term}" }
-
-        # if found_iids.size > limit
-        #   break
-        # end
       end
 
-      sorted_iids = found_iids.to_a.sort_by do |k, v|
+      sorted_iids = found_iids.to_a.unstable_sort_by do |k, v|
         -v # in reverse
       end
 
-      # TODO: add offset
       sorted_iids.each_with_index do |(iid, value), index|
-        break if index >= limit
+        next if index < offset
+        break if index >= limit + offset
 
         if oid = kv_action.get_iid_to_oid(iid)
           result_oids << oid

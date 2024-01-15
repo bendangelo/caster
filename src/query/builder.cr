@@ -79,23 +79,6 @@ module Query
       Result.new(Type::List, item: item, query_id: query_id, limit: limit, offset: offset)
     end
 
-    def self.push(
-      collection : String,
-      bucket : String,
-      object : String,
-      text : String,
-      lang_code : String?
-    ) : ResultLexer?
-      item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
-      mode, hinted_lang = Lexer::TokenBuilder.from_query_lang lang_code
-      text_lexed = Lexer::TokenBuilder.from(mode, text, hinted_lang)
-
-      return nil if item.is_a? Store::ItemError
-      return nil if text_lexed.nil?
-
-      return ResultLexer.new(Type::Push, item, text_lexed)
-    end
-
     def self.pop(
       collection : String,
       bucket : String,
