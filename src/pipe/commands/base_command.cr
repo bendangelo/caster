@@ -109,6 +109,8 @@ module Pipe
       return value if value.nil?
 
       value.split(",").map {|i| i.to_u32 }
+    rescue ArgumentError
+      nil
     end
 
     def self.parse_filter(parts, key, if_none = nil)
@@ -120,9 +122,24 @@ module Pipe
 
       return value if value.nil?
 
-      partition = value.partition(",").map {|i| i.to_u32 }
+      partition = value.split(",")
 
-      {partition[0]?, partition[2]?}
+      val1 : UInt32 = 0
+      val2 : UInt32 = 0
+
+      if partition[0]?
+        val1 = partition[0].to_u32? || 0_u32
+      else
+        return nil
+      end
+
+      if partition[1]?
+        val2 = partition[1].to_u32? || 0_u32
+      else
+        return nil
+      end
+
+      {val1, val2}
     end
 
     def self.commit_ok_operation(query) : CommandResult

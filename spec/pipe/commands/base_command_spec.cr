@@ -3,6 +3,52 @@ require "../../spec_helper"
 Spectator.describe Pipe::BaseCommand do
   include Pipe
 
+  describe ".parse_filter" do
+
+    subject(command) { Pipe::BaseCommand.parse_filter input, key }
+
+    provided input: "collection EQ 0,1 -- my text here".split(" "), key: "EQ" do
+      expect(command).to eq({0, 1})
+    end
+
+    provided input: "collection EQ 0,1,0 -- my text here".split(" "), key: "EQ" do
+      expect(command).to eq({0, 1})
+    end
+
+    provided input: "collection EQ 0e0 -- my text here".split(" "), key: "EQ" do
+      expect(command).to eq(nil)
+    end
+
+    provided input: "collection EQ -- my text here".split(" "), key: "EQ" do
+      expect(command).to eq(nil)
+    end
+
+    provided input: "collection 0e0 -- my text here".split(" "), key: "EQ" do
+      expect(command).to eq(nil)
+    end
+  end
+
+  describe ".parse_attrs" do
+
+    subject(command) { Pipe::BaseCommand.parse_attrs input, key }
+
+    provided input: ["ATTR", "0,1,2"], key: "ATTR" do
+      expect(command).to eq([0, 1, 2])
+    end
+
+    provided input: ["ATR", "0,1,2"], key: "ATTR" do
+      expect(command).to eq(nil)
+    end
+
+    provided input: ["ATTR", "e"], key: "ATTR" do
+      expect(command).to eq(nil)
+    end
+
+    provided input: ["ATTR"], key: "ATTR" do
+      expect(command).to eq(nil)
+    end
+  end
+
   describe ".parse_args_with_text" do
 
     subject(command) { Pipe::BaseCommand.parse_args_with_text input }

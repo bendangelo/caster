@@ -4,7 +4,7 @@ module Pipe
       parts = BaseCommand.parse_args(input)
       collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
 
-      return CommandResult.error CommandError::InvalidFormat
+      return CommandResult.ok
       # case [parts.shift?, parts.shift?, parts.shift?]
       # when [nil, _, _]
       #   Ok([ChannelCommandResponse::Result.new("actions(#{CONTROL_TRIGGER_ACTIONS.join(", ")})")])

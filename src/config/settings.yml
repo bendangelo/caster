@@ -17,7 +17,7 @@ search:
   list_limit_maximum: 20
 
   term_index_limit: 10
-  popularity_weight: 30
+  popularity_weight: .3
 
 kv:
   path: "./data/store/kv/"
