@@ -1,6 +1,6 @@
 module Executer
   class Push
-    def self.execute(item : Store::Item, token : Lexer::Token, attrs : Array(UInt16)?)
+    def self.execute(item : Store::Item, token : Lexer::Token, attrs : Array(UInt32)?)
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
 

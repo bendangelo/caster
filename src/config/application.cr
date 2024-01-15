@@ -32,7 +32,7 @@ module Caster
   def self.boot(silent = false)
     Caster::Logger.setup
 
-    Log.debug { "Loading settings from #{Caster::Settings.settings_path}" }
+    Log.debug { "Loading settings from #{Caster::Settings.settings_path}" } if !silent
 
     Caster::Settings.load_from_env! silent
 

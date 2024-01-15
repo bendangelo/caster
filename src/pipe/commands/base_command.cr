@@ -108,7 +108,7 @@ module Pipe
 
       return value if value.nil?
 
-      value.split(",").map {|i| i.to_u16 }
+      value.split(",").map {|i| i.to_u32 }
     end
 
     def self.commit_ok_operation(query) : CommandResult

@@ -27,7 +27,7 @@ Spectator.describe Executer::FlushO do
       action.set_term_to_iids(term, Set{iid}, 1)
       action.set_oid_to_iid(oid, iid)
       action.set_iid_to_terms(iid, terms)
-      action.set_iid_to_attrs(iid, UInt16[1, 0])
+      action.set_iid_to_attrs(iid, UInt32[1, 0])
     end
 
     context "counts indexed terms" do

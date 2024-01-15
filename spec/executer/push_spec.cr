@@ -10,7 +10,7 @@ Spectator.describe Executer::Push do
       let(collection) { "col" }
       let(bucket) { "buck" }
       let(object) { "push_obj" }
-      let(attrs) { UInt16[0, 1] }
+      let(attrs) { UInt32[0, 1] }
 
       let(store) do
         Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)

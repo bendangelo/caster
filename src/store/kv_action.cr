@@ -333,7 +333,7 @@ module Store
         Log.debug { "store get iid-to-attrs: #{store_key}" }
 
         if value = store.get?(store_key.as_bytes)
-          decoded_value = KVAction.decode_u16_array(value)
+          decoded_value = KVAction.decode_u32_array(value)
 
           Log.debug { "got iid-to-attrs: #{store_key} with decoded value: #{decoded_value}" }
           decoded_value
@@ -345,13 +345,13 @@ module Store
       end
     end
 
-    def set_iid_to_attrs(iid : UInt32, attrs : Array(UInt16))
+    def set_iid_to_attrs(iid : UInt32, attrs : Array(UInt32))
       if store
         store_key = Keyer.iid_to_attrs(@bucket, iid)
 
         Log.debug { "store set iid-to-attrs: #{store_key}" }
 
-        terms_hashed_encoded = KVAction.encode_u16_array(attrs)
+        terms_hashed_encoded = KVAction.encode_u32_array(attrs)
 
         Log.debug { "store set iid-to-attrs: #{store_key} with encoded value: #{terms_hashed_encoded}" }
 
@@ -522,7 +522,7 @@ module Store
       decoded
     end
 
-    def self.encode_u16_array(decoded : Array(UInt16)) : Bytes
+    def self.encode_u32_array(decoded : Array(UInt32)) : Bytes
       io = IO::Memory.new(decoded.size * 4)
 
       decoded.each do |decoded_item|
@@ -532,12 +532,12 @@ module Store
       io.to_slice
     end
 
-    def self.decode_u16_array(encoded : Bytes)
-      decoded = Array(UInt16).new(encoded.size)
+    def self.decode_u32_array(encoded : Bytes)
+      decoded = Array(UInt32).new(encoded.size)
 
       encoded.each_with_index do |byte, i|
-        if i % 2 == 0
-          decoded << IO::ByteFormat::LittleEndian.decode(UInt16, encoded[i, 2])
+        if i % 4 == 0
+          decoded << IO::ByteFormat::LittleEndian.decode(UInt32, encoded[i, 4])
         end
       end
 
