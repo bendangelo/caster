@@ -16,7 +16,7 @@ search:
   list_limit_default: 5
   list_limit_maximum: 20
 
-  term_index_limit: 10
+  term_index_limit: 16
   popularity_weight: .3
 
 kv:

@@ -1,39 +1,43 @@
 module Pipe
+
+  struct PushParams
+    include JSON::Serializable
+    property collection : String, bucket : String, object : String, lang : String?, attrs : Array(UInt32)?, text : String, keywords : Array(String)?
+  end
+
   class IngestCommand
 
     def self.dispatch_push(input : String) : CommandResult
-      parts, text = BaseCommand.parse_args_with_text(input)
-      collection, bucket, object = parts.shift?, parts.shift?, parts.shift?
+      params = PushParams.from_json input
+      # parts, text = BaseCommand.parse_args_with_text(input)
+      collection, bucket, object = params.collection, params.bucket, params.object
+      text = params.text
 
       if collection && bucket && object && text
         Log.info { "dispatching ingest push in collection: #{collection}, bucket: #{bucket} and object: #{object} with text (#{text})" }
 
-        # Define push parameters
-
-        # Parse meta parts (meta comes after text; extract meta parts second)
-        push_lang = BaseCommand.parse_meta parts, "LANG"
-        push_attrs = BaseCommand.parse_attrs parts, "ATTR"
-
         if text.blank?
           CommandResult.error CommandError::InvalidFormat, "text is blank"
         else
-          Log.info { "will push for text: #{text} with hinted locale: #{push_lang}" }
+          Log.info { "will push for text: #{text} with hinted locale: #{params.lang}" }
 
           # Commit 'push' query
           item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
-          mode, hinted_lang = Lexer::TokenBuilder.from_query_lang push_lang
+          mode, hinted_lang = Lexer::TokenBuilder.from_query_lang params.lang
           token = Lexer::TokenBuilder.from(mode, text, hinted_lang)
 
           return CommandResult.error :query_error if item.is_a? Store::ItemError
           return CommandResult.error :query_error if token.nil?
 
-          Executer::Push.execute item, token, push_attrs
+          Executer::Push.execute item, token, params.attrs
 
           return CommandResult.ok
         end
       else
-        CommandResult.error CommandError::InvalidFormat, "PUSH <collection> <bucket> <object> [LANG value]? [ATTR val1,val2,..]? -- <text>"
+        CommandResult.error CommandError::InvalidFormat, "PUSH <json>"
       end
+    rescue e : JSON::ParseException
+      CommandResult.error CommandError::InvalidFormat, e.message || ""
     end
 
     def self.dispatch_pop(input) : CommandResult
@@ -120,29 +124,6 @@ module Pipe
 
     # def self.dispatch_help(parts) : CommandResult
     #   BaseCommand.generic_dispatch_help(parts, &*MANUAL_MODE_INGEST)
-    # end
-    #
-    # def self.handle_push_meta(meta_result : MetaPartsResult) : Result(Option(QueryGenericLang), PipeCommandError)
-    #   case meta_result
-    #   when Ok([meta_key, meta_value])
-    #     Log.info { "handle push meta: #{meta_key} = #{meta_value}" }
-    #
-    #     case meta_key
-    #     when "LANG"
-    #       # 'LANG(<locale>)' where <locale> ∈ ISO 639-3
-    #       query_lang_parsed = QueryGenericLang.from_value(meta_value)
-    #
-    #       if query_lang_parsed
-    #         Ok(Some(query_lang_parsed))
-    #       else
-    #         Err(BaseCommand.make_error_invalid_meta_value(meta_key, meta_value))
-    #       end
-    #     else
-    #       Err(BaseCommand.make_error_invalid_meta_key(meta_key, meta_value))
-    #     end
-    #   when Err(err)
-    #     Err(BaseCommand.make_error_invalid_meta_key(err[0], err[1]))
-    #   end
     # end
   end
 end

@@ -73,11 +73,6 @@ module Pipe
       @@random.base64 EVENT_ID_SIZE
     end
 
-    TEXT_PART_BOUNDARY = '"'
-    TEXT_PART_ESCAPE = '\\'
-    META_PART_GROUP_OPEN = '('
-    META_PART_GROUP_CLOSE = ')'
-
     BACKUP_KV_PATH = "kv"
     BACKUP_FST_PATH = "fst"
 
@@ -108,7 +103,7 @@ module Pipe
 
       return value if value.nil?
 
-      value.split(",").map {|i| i.to_u32 }
+      value.split(",").map {|i| i.to_u32? || 0_u32 }
     rescue ArgumentError
       nil
     end

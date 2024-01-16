@@ -23,6 +23,11 @@ Spectator.describe Lexer::Token do
       expect(extract).to eq ["5am", 2488280076, 0, "mellow", 3790024579, 2, "chill", 1261417832, 3, "jazz", 3642901015, 4, "hip", 1563471963, 5, "hop", 841495740, 6, "beat", 3168828409, 7]
     end
 
+    # keep periods, after split, remove so U.S. turns into US
+    # provided input: "Pastors Get Involved Or U.S. Dies, Rev. Cook Says at Historic 1607 First Landing Event", index_limit: UInt8::MAX do
+    #   expect(extract).to eq ["5am", 2488280076, 0, "mellow", 3790024579, 2, "chill", 1261417832, 3, "jazz", 3642901015, 4, "hip", 1563471963, 5, "hop", 841495740, 6, "beat", 3168828409, 7]
+    # end
+
     provided input: "banks stemming testing", index_limit: UInt8::MAX do
       expect(extract).to eq ["bank", 1266403283, 0, "stem", 4181876951, 1, "test", 1042293711, 2]
     end

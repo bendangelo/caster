@@ -25,20 +25,8 @@ Spectator.describe Pipe::Message do
 
     subject(handle_mode) { Message.handle_mode mode, message }
 
-    provided mode: Mode::Ingest, message: "PUSH test my data \"dsfdf\"" do
+    provided mode: Mode::Ingest, message: %(PUSH {"collection": "test", "bucket": "my", "object": "data", "text": ""}) do
       expect(handle_mode).to eq CommandResult.new ResponseType::Err, value: "text is blank", error: CommandError::InvalidFormat
-    end
-
-    provided mode: Mode::Ingest, message: "PUSH test my data ATTR -- dsfdf" do
-      expect(handle_mode).to eq CommandResult.new ResponseType::Ok
-    end
-
-    provided mode: Mode::Ingest, message: "PUSH test my data ATTR 0,0 -- dsfdf" do
-      expect(handle_mode).to eq CommandResult.new ResponseType::Ok
-    end
-
-    provided mode: Mode::Ingest, message: "PUSH test my data -- dsfdf" do
-      expect(handle_mode).to eq CommandResult.new ResponseType::Ok
     end
 
     provided mode: Mode::Search, message: "PUSH not my command" do

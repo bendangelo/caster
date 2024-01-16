@@ -1,8 +1,16 @@
 module Pipe
+
+  struct QueryParams
+    include JSON::Serializable
+    property collection : String, bucket : String, limit : Int32?, lang : String?, q : String, offset : Int32?, greater_than : Tuple(UInt32, UInt32)?, less_than : Tuple(UInt32, UInt32)?, equal : Tuple(UInt32, UInt32)?, dir : Int32 = 0, order : Int32 = 0
+  end
+
   class SearchCommand
     def self.dispatch_query(input)
-      parts, text = BaseCommand.parse_args_with_text(input)
-      collection, bucket = parts.shift?, parts.shift?
+      params = QueryParams.from_json input
+
+      collection, bucket = params.collection, params.bucket
+      text = params.q
 
       if collection && bucket && text
         # Generate command identifier
@@ -12,22 +20,14 @@ module Pipe
 
         # Define query parameters
 
-        query_limit = BaseCommand.parse_meta(parts, "LIMIT", Caster.settings.search.query_limit_default).to_i
-        query_offset = BaseCommand.parse_meta(parts, "OFFSET", 0).to_i
+        query_limit = params.limit || Caster.settings.search.query_limit_default
+        query_offset = params.offset || 0
 
-        order = -1 # DESC ordering
-        order_attr = -1
-        if order_attr = BaseCommand.parse_meta(parts, "ASC", -1).to_i
-          order = 1
-        elsif order_attr = BaseCommand.parse_meta(parts, "DESC", -1).to_i
-          order = -1
-        end
+        query_lang = params.lang
 
-        query_lang = BaseCommand.parse_meta parts, "LANG"
-
-        greater_than = BaseCommand.parse_filter parts, "GT"
-        less_than = BaseCommand.parse_filter parts, "LT"
-        equal = BaseCommand.parse_filter parts, "EQ"
+        greater_than = params.greater_than
+        less_than = params.less_than
+        equal = params.equal
 
         if query_limit < 1 || query_limit > Caster.settings.search.query_limit_maximum
           return CommandResult.error CommandError::PolicyReject, "LIMIT out of minimum/maximum bounds"
@@ -42,7 +42,7 @@ module Pipe
           return CommandResult.error :query_error if item.is_a? Store::ItemError
           return CommandResult.error :query_error if token.nil?
 
-          results = Executer::Search.execute(item, token, query_limit, query_offset, greater_than, less_than, equal, order, order_attr)
+          results = Executer::Search.execute(item, token, query_limit, query_offset, greater_than, less_than, equal, params.dir, params.order)
 
           if results.empty?
             event_value = "QUERY"
@@ -55,6 +55,8 @@ module Pipe
       else
         return CommandResult.error CommandError::InvalidFormat, "QUERY <collection> <bucket> [LIMIT <count>]? [OFFSET <count>]? [LANG <locale>]? -- <terms>"
       end
+    rescue e : JSON::ParseException
+      CommandResult.error CommandError::InvalidFormat, "QUERY <json> -- #{e.message}"
     end
 
     def self.dispatch_suggest(input)
@@ -131,5 +133,5 @@ module Pipe
     # def self.dispatch_help(parts : Slice(String)) : CommandResult
     #   BaseCommand.generic_dispatch_help(parts, &*MANUAL_MODE_SEARCH)
     # end
-    end
   end
+end

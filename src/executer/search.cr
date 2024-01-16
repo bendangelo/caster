@@ -5,11 +5,18 @@ module Executer
       @@debug
     end
 
-    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, greater_than : Tuple(UInt32, UInt32)? = nil, less_than : Tuple(UInt32, UInt32)? = nil, equal : Tuple(UInt32, UInt32)? = nil, order = -1, order_attr = -1)
+    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, greater_than : Tuple(UInt32, UInt32)? = nil, less_than : Tuple(UInt32, UInt32)? = nil, equal : Tuple(UInt32, UInt32)? = nil, dir = 0, order = 0)
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
       bucket = store.bucket
+      if dir <= 0
+        dir = -1 # DESC
+      else
+        dir = 1 # ASC
+      end
+
+      order = 0 if order < 0
 
       if bucket.nil?
         Log.error { "bucket is nil" }
@@ -42,15 +49,15 @@ module Executer
               end
             end
 
-            if order_attr == -1
+            if order == 0
               if found_iids.has_key? iid
                 found_iids[iid] += token.index_limit.to_i32 - term_index - index
               else
                 found_iids[iid] = token.index_limit.to_i32 - term_index - index
               end
               # use attr for ordering
-            elsif attrs = kv_action.get_iid_to_attrs(iid)
-              found_iids[iid] = attrs[order_attr].to_i32
+            elsif (attrs = kv_action.get_iid_to_attrs(iid)) && (attr_value = attrs[order - 1]?)
+              found_iids[iid] = attr_value.to_i32
             else
               # no value, use default
               found_iids[iid] = 0
@@ -65,7 +72,7 @@ module Executer
       end
 
       sorted_iids = found_iids.to_a.unstable_sort_by do |k, v|
-        v * order # in reverse
+        v * dir # in reverse
       end
 
       sorted_iids.each_with_index do |(iid, value), index|

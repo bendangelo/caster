@@ -92,7 +92,7 @@ module Pipe
 
         # Buffer overflow?
         # Log.debug { "read length #{read_length} max line size #{max_line_size}" }
-        if read_length == max_line_size
+        if read_length >= max_line_size
           # Do not continue, as there is too much pending data in the buffer.
           # Most likely the client does not implement a proper back-pressure
           # management system, thus we terminate it.

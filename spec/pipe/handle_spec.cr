@@ -107,7 +107,7 @@ Spectator.describe Pipe::Handle do
   describe ".handle_stream" do
 
     # short for testing
-    let(max_line_size) { 50 }
+    let(max_line_size) { 100 }
 
     context "bulk messages" do
 
@@ -154,7 +154,7 @@ Spectator.describe Pipe::Handle do
 
     context "QUERY sent" do
 
-      double :tcpsocket, gets_input: %[QUERY messages user:1 "hello"\n], puts: nil do
+      double :tcpsocket, gets_input: %(QUERY {"collection": "messages", "bucket": "user:1", "q":"hello"}\n), puts: nil do
           stub def read(buffer)
             slice = gets_input.to_unsafe.to_slice(gets_input.size)
 

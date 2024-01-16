@@ -28,7 +28,7 @@ module Executer
       #   bi-directional relationship)
       oid = object
       iid = kv_action.get_oid_to_iid(oid) do |store_key|
-        Log.info { "must initialize push executor oid-to-iid and iid-to-oid" }
+        Log.debug { "must initialize push executor oid-to-iid and iid-to-oid" }
 
         iid_incr = kv_action.get_meta_to_value(Store::IIDIncr)
         iid_incr = (iid_incr.nil? ? 0_u32 : iid_incr.to_u32) + 1
@@ -52,7 +52,7 @@ module Executer
         kv_action.set_iid_to_attrs(iid, attrs)
       end
 
-      Log.info { "got push executor stored iid-to-terms: #{terms}" }
+      Log.debug { "got push executor stored iid-to-terms: #{terms}" }
 
       token.parse_text do |term, term_hashed, index|
         if terms.add?(term_hashed)
@@ -63,7 +63,7 @@ module Executer
 
           next if !iids.add?(iid)
 
-          Log.info { "has push executor term-to-iids: #{iid}" }
+          Log.debug { "has push executor term-to-iids: #{iid}" }
 
           # truncate_limit = APP_CONF.store.kv.retain_word_objects
           #
@@ -84,7 +84,7 @@ module Executer
 
       if has_commits
 
-        Log.info { "has push executor iid-to-terms commits: #{terms}" }
+        Log.info { "pushed iid-to-terms #{iid} commits: #{terms}" }
 
         kv_action.set_iid_to_terms(iid, terms)
       end

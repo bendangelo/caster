@@ -29,12 +29,12 @@ Spectator.describe Pipe::IngestCommand do
 
     subject(ingest) { Pipe::IngestCommand.dispatch_push parts }
 
-    provided parts: "collection bucket object -- text" do
-      expect(ingest.type).to eq ResponseType::Ok
+    provided parts: %({"collection": "collection", "bucket": "bucket", "object": "object", "text": "testing"}) do
+      expect(ingest).to eq CommandResult.ok
     end
 
-    provided parts: "collection bucket object LANG eng -- text eng" do
-      expect(ingest.type).to eq ResponseType::Ok
+    provided parts: %({"collection": "collection", "bucket": "bucket", "object": "object", "text": "testing", "keywords": ["hey", "wa"]}) do
+      expect(ingest).to eq CommandResult.ok
     end
 
     context "invalid parts" do

@@ -36,12 +36,16 @@ Spectator.describe Pipe::BaseCommand do
       expect(command).to eq([0, 1, 2])
     end
 
+    provided input: ["ATTR", "{:limit=>1000,"], key: "ATTR" do
+      expect(command).to eq([0, 0])
+    end
+
     provided input: ["ATR", "0,1,2"], key: "ATTR" do
       expect(command).to eq(nil)
     end
 
     provided input: ["ATTR", "e"], key: "ATTR" do
-      expect(command).to eq(nil)
+      expect(command).to eq([0])
     end
 
     provided input: ["ATTR"], key: "ATTR" do
@@ -57,8 +61,8 @@ Spectator.describe Pipe::BaseCommand do
       expect(command).to eq({["collection"], "my text here"})
     end
 
-    provided input: "collection bucket LANG eng -- \"hey this is -- cool \\n" do
-      expect(command).to eq({["collection", "bucket", "LANG", "eng"], "\"hey this is -- cool \n"})
+    provided input: %q[collection bucket LANG eng -- hey this is -- cool \n] do
+      expect(command).to eq({["collection", "bucket", "LANG", "eng"], "hey this is -- cool \n"})
     end
 
     provided input: "collection bucket -- " do

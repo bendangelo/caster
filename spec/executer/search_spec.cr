@@ -24,8 +24,8 @@ Spectator.describe Executer::Search do
     let(greater_than) { nil }
     let(less_than) { nil }
     let(equal) { nil }
-    let(order) { -1 } # DESC
-    let(order_attr) { -1 }
+    let(dir) { 0 } # DESC
+    let(order) { 0 }
 
     before do
 
@@ -59,7 +59,7 @@ Spectator.describe Executer::Search do
       action.delete_iid_to_attrs(:obj6.to_i.to_u32)
     end
 
-    subject(results) { Search.execute item, token, limit, offset, greater_than, less_than, equal, order, order_attr }
+    subject(results) { Search.execute item, token, limit, offset, greater_than, less_than, equal, dir, order }
 
     context "setup test" do
 
@@ -69,13 +69,13 @@ Spectator.describe Executer::Search do
       end
     end
 
-    context "order ASC, DESC" do
+    context "dir ASC, DESC" do
 
-      provided order_attr: 0, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+      provided order: 1, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
         expect(results).to eq ["obj3", "obj1", "obj2"]
       end
 
-      provided order_attr: 0, order: 1, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+      provided order: 1, dir: 1, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
         expect(results).to eq ["obj2", "obj1", "obj3"]
       end
 
