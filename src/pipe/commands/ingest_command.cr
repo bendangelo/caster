@@ -58,7 +58,7 @@ module Pipe
       parts = BaseCommand.parse_args(input)
       collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?
 
-      if collection && !bucket && !object && !extra
+      if collection && !extra
         Log.info { "dispatching ingest count in collection: #{collection}" }
 
         # Make 'count' query

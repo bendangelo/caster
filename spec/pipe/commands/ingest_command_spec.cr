@@ -3,6 +3,28 @@ require "../../spec_helper"
 Spectator.describe Pipe::IngestCommand do
   include Pipe
 
+  describe ".dispatch_count" do
+
+    subject(count) { Pipe::IngestCommand.dispatch_count parts }
+
+    provided parts: "collection bucket object LANG eng -- text eng" do
+      expect(count.type).to eq ResponseType::Err
+    end
+
+    provided parts: "collection bucket object" do
+      expect(count.type).to eq ResponseType::Result
+    end
+
+    provided parts: "collection bucket object" do
+      expect(count.type).to eq ResponseType::Result
+    end
+
+    provided parts: "collection bucket object" do
+      expect(count.type).to eq ResponseType::Result
+    end
+
+  end
+
   describe ".dispatch_push" do
 
     subject(ingest) { Pipe::IngestCommand.dispatch_push parts }
