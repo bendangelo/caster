@@ -5,7 +5,7 @@ module Executer
       @@debug
     end
 
-    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, greater_than : Tuple(UInt32, UInt32)? = nil, less_than : Tuple(UInt32, UInt32)? = nil, equal : Tuple(UInt32, UInt32)? = nil)
+    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, greater_than : Tuple(UInt32, UInt32)? = nil, less_than : Tuple(UInt32, UInt32)? = nil, equal : Tuple(UInt32, UInt32)? = nil, order = -1, order_attr = -1)
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
@@ -33,15 +33,60 @@ module Executer
           Log.debug { "got search executor iids: #{iids} for term: #{term}" }
 
           iids.each do |iid|
-            if found_iids.has_key? iid
-              found_iids[iid] += token.index_limit.to_i32 - term_index - index
+            # filter values
+            if greater_than || less_than || equal
+              if attrs = kv_action.get_iid_to_attrs(iid)
+                next if greater_than && attrs[greater_than[0]]? != nil && attrs[greater_than[0]] <= greater_than[1]
+                next if less_than && attrs[less_than[0]]? != nil && attrs[less_than[0]] >= less_than[1]
+                next if equal && attrs[equal[0]]? != nil && attrs[equal[0]] != equal[1]
+              end
+            end
+
+            if order_attr == -1
+              if found_iids.has_key? iid
+                found_iids[iid] += token.index_limit.to_i32 - term_index - index
+              else
+                found_iids[iid] = token.index_limit.to_i32 - term_index - index
+              end
+              # use attr for ordering
+            elsif attrs = kv_action.get_iid_to_attrs(iid)
+              found_iids[iid] = attrs[order_attr].to_i32
             else
-              found_iids[iid] = token.index_limit.to_i32 - term_index - index
+              # no value, use default
+              found_iids[iid] = 0
             end
           end
 
+          # TODO: suggest_words
+
         end
 
+        Log.debug { "got search executor iid intersection: #{found_iids} for term: #{term}" }
+      end
+
+      sorted_iids = found_iids.to_a.unstable_sort_by do |k, v|
+        v * order # in reverse
+      end
+
+      sorted_iids.each_with_index do |(iid, value), index|
+        next if index < offset
+        break if index >= limit + offset
+
+        if oid = kv_action.get_iid_to_oid(iid)
+          result_oids << oid
+          # @@debug << "#{oid} #{-positions[iid].sum} #{positions[iid].size}"
+        else
+          Log.error { "failed getting search executor iid-to-oid" }
+        end
+      end
+
+      Log.info { "got search executor final oids: #{result_oids}" }
+
+      result_oids
+    end
+  end
+
+  def self.suggest_words
         # next if iids.nil?
         # higher_limit = APP_CONF.store.kv.retain_word_objects
         # alternates_try = APP_CONF.channel.search.query_alternates_try
@@ -78,29 +123,6 @@ module Executer
         #     end
         # end
 
-        Log.debug { "got search executor iid intersection: #{found_iids} for term: #{term}" }
-      end
-
-      sorted_iids = found_iids.to_a.unstable_sort_by do |k, v|
-        -v # in reverse
-      end
-
-      sorted_iids.each_with_index do |(iid, value), index|
-        next if index < offset
-        break if index >= limit + offset
-
-        if oid = kv_action.get_iid_to_oid(iid)
-          result_oids << oid
-          # @@debug << "#{oid} #{-positions[iid].sum} #{positions[iid].size}"
-        else
-          Log.error { "failed getting search executor iid-to-oid" }
-        end
-      end
-
-      Log.info { "got search executor final oids: #{result_oids}" }
-
-      result_oids
-    end
   end
 
 end

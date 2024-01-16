@@ -14,6 +14,15 @@ module Pipe
 
         query_limit = BaseCommand.parse_meta(parts, "LIMIT", Caster.settings.search.query_limit_default).to_i
         query_offset = BaseCommand.parse_meta(parts, "OFFSET", 0).to_i
+
+        order = -1 # DESC ordering
+        order_attr = -1
+        if order_attr = BaseCommand.parse_meta(parts, "ASC", -1).to_i
+          order = 1
+        elsif order_attr = BaseCommand.parse_meta(parts, "DESC", -1).to_i
+          order = -1
+        end
+
         query_lang = BaseCommand.parse_meta parts, "LANG"
 
         greater_than = BaseCommand.parse_filter parts, "GT"
@@ -33,7 +42,7 @@ module Pipe
           return CommandResult.error :query_error if item.is_a? Store::ItemError
           return CommandResult.error :query_error if token.nil?
 
-          results = Executer::Search.execute(item, token, query_limit, query_offset, greater_than, less_than, equal)
+          results = Executer::Search.execute(item, token, query_limit, query_offset, greater_than, less_than, equal, order, order_attr)
 
           if results.empty?
             event_value = "QUERY"
