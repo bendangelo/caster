@@ -1,5 +1,7 @@
 module Pipe
   class ControlCommand
+    # TODO: add endpoint to view information about an object
+
     def self.dispatch_trigger(input) : CommandResult
       parts = BaseCommand.parse_args(input)
       collection, bucket, object, extra = parts.shift?, parts.shift?, parts.shift?, parts.shift?

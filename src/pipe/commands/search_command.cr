@@ -37,7 +37,7 @@ module Pipe
           item = Store::ItemBuilder.from_depth_2(collection, bucket)
 
           mode, hinted_lang = Lexer::TokenBuilder.from_query_lang query_lang
-          token = Lexer::TokenBuilder.from(mode, text, hinted_lang)
+          token = Lexer::TokenBuilder.from(mode, text, hinted_lang, Caster.settings.search.term_index_limit)
 
           return CommandResult.error :query_error if item.is_a? Store::ItemError
           return CommandResult.error :query_error if token.nil?

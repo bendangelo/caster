@@ -141,6 +141,15 @@ Spectator.describe Executer::Search do
 
     end
 
+    context "find low quality match with single term" do
+
+      provided query: "last", oids: {obj1: "Indiana Jones and the Last Crusade"} do
+        result = Search.execute item, token, limit, offset
+        expect(result).to eq ["obj1"]
+      end
+
+    end
+
     context "find matches with two terms" do
       provided query: "hello world", oids: {obj1: "unrelated text", obj2: "hello world - this something", obj3: "the hello world"} do
         result = Search.execute item, token, limit, offset
