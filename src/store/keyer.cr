@@ -1,7 +1,7 @@
 module Store
 
   KEY_SIZE = 9
-  MAX_TERM_INDEX_SIZE = 245
+  MAX_TERM_INDEX_SIZE = 245_u8
 
   alias KeyBytes = Slice(UInt8)
   alias KeyPrefix = Slice(UInt8)

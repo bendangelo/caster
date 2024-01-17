@@ -31,7 +31,7 @@ module Lexer
       word.stem
     end
 
-    def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng, @index_limit : UInt8 = UInt8::MAX, @keywords : String = "")
+    def initialize(@mode : TokenMode = TokenMode::NormalizeOnly, @text : String = "", @locale : Lang = Lang::Eng, @index_limit : UInt8 = Store::MAX_TERM_INDEX_SIZE, @keywords : String = "")
       # Tokenize words depending on the locale
       # @words = case @locale
       #          when Lang::Cmn

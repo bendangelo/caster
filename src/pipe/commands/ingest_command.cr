@@ -24,7 +24,7 @@ module Pipe
           # Commit 'push' query
           item = Store::ItemBuilder.from_depth_3(collection, bucket, object)
           mode, hinted_lang = Lexer::TokenBuilder.from_query_lang params.lang
-          token = Lexer::TokenBuilder.from(mode, text, hinted_lang, params.keywords)
+          token = Lexer::TokenBuilder.from(mode, text, hinted_lang, Caster.settings.search.term_index_limit, params.keywords)
 
           return CommandResult.error :query_error if item.is_a? Store::ItemError
           return CommandResult.error :query_error if token.nil?

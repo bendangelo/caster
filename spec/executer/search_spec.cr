@@ -6,7 +6,7 @@ Spectator.describe Executer::Search do
   describe ".execute" do
     let(collection) { "executer_search" }
     # make a unique bucket for each spec
-    let(bucket) { query.gsub " ", "_" }
+    let(bucket) { "#{query}#{Random.rand(100)}" }
 
     let(store) do
       Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
@@ -26,13 +26,25 @@ Spectator.describe Executer::Search do
     let(equal) { nil }
     let(dir) { 0 } # DESC
     let(order) { 0 }
+    let(keywords) { {} of Symbol => String }
 
     before do
 
       oids.each do |k, v|
         v.split(" ").each_with_index do |w, i|
           if word = Lexer::Token.normalize(w)
-            action.add_term_to_iid?(Store::Hasher.to_compact(word), k.to_i.to_u32, i.to_u8 + 1)
+            action.add_term_to_iids?(Store::Hasher.to_compact(word), k.to_i.to_u32, i.to_u8)
+          end
+        end
+
+        action.set_iid_to_oid(k.to_i.to_u32, k.to_s)
+      end
+
+      # put at last index
+      keywords.each do |k, v|
+        v.split(" ").each do |w|
+          if word = Lexer::Token.normalize(w)
+            action.add_term_to_iids?(Store::Hasher.to_compact(word), k.to_i.to_u32, Store::MAX_TERM_INDEX_SIZE)
           end
         end
 
@@ -111,6 +123,15 @@ Spectator.describe Executer::Search do
 
     end
 
+    context "find title matches first, keywords last" do
+
+      provided query: "hello", oids: {obj1: "yes where am I hello", obj2: "title"}, keywords: {obj2: "hello"} do
+        result = Search.execute item, token, limit, offset
+        expect(result).to eq ["obj1", "obj2"]
+      end
+
+    end
+
     context "find matches with single term" do
 
       provided query: "hello", oids: {obj1: "today I say hello", obj2: "hello", obj3: "today my world"} do
@@ -131,7 +152,7 @@ Spectator.describe Executer::Search do
       provided query: "Big hamburger store banner", oids: {obj1: "the hamburger", obj2: "store", obj3: "hamburger are made in a store over here", obj4: "banner over here"} do
         result = Search.execute item, token, limit, offset
         # expect(Search.debug).to eq ["obj3", "obj1"]
-        expect(result).to eq ["obj3", "obj1"]
+        expect(result).to eq ["obj3", "obj1", "obj2", "obj4"]
       end
     end
 

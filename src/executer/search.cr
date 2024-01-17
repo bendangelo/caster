@@ -35,7 +35,7 @@ module Executer
       found_iids = Hash(UInt32, Int32).new
 
       token.parse_text do |term, term_hashed, index|
-        kv_action.iterate_term_to_iids(term_hashed, index, token.index_limit) do |iids, term_index|
+        kv_action.iterate_term_to_iids(term_hashed, 0, token.index_limit) do |iids, term_index|
 
           Log.debug { "got search executor iids: #{iids} for term: #{term}" }
 

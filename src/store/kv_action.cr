@@ -118,7 +118,7 @@ module Store
       # end
     end
 
-    def add_term_to_iid?(term_hashed : TermHash, iid : UInt32, index : UInt8 = 0)
+    def add_term_to_iids?(term_hashed : TermHash, iid : UInt32, index : UInt8 = 0)
       if store
         store_key = Keyer.term_to_iids(@bucket, term_hashed, index)
 

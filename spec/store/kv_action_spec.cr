@@ -107,6 +107,10 @@ Spectator.describe Store::KVAction do
       expect( action.set_term_to_iids(1_u32, Set.new(UInt32[0, 1, 2]), 1)).to eq nil
       expect( action.get_term_to_iids(1)).to eq Set.new UInt32[0, 1, 2]
       expect( action.get_term_to_iids(1, 1)).to eq Set.new UInt32[0, 1, 2]
+
+      expect( action.add_term_to_iids?(1_u32, 3_u32, 1)).to eq true
+      expect( action.get_term_to_iids(1, 1)).to eq Set.new UInt32[0, 1, 2, 3]
+
       expect( action.delete_term_to_iids(1)).to eq true
       expect( action.delete_term_to_iids(1, 1)).to eq true
       expect( action.get_term_to_iids(1)).to eq nil
