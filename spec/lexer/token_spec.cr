@@ -5,7 +5,9 @@ Spectator.describe Lexer::Token do
 
   describe ".parse_text" do
 
-    subject(extract) { Token.new(text: input, index_limit: index_limit.to_u8).parse_text }
+    let(keywords) { "" }
+
+    subject(extract) { Token.new(text: input, index_limit: index_limit.to_u8, keywords: keywords).parse_text }
 
     provided input: "banks banking bank is a bank", index_limit: UInt8::MAX do
       expect(extract).to eq ["bank", 1266403283, 0]
@@ -13,6 +15,10 @@ Spectator.describe Lexer::Token do
 
     provided input: "home? hey!", index_limit: UInt8::MAX do
       expect(extract).to eq ["home", 3801215962, 0, "hei", 3039456708, 1]
+    end
+
+    provided input: "title", keywords: "keyword, second", index_limit: 100 do
+      expect(extract).to eq ["titl", 3736659679, 0, "keyword", 1902477040, 100, "second", 4023803357, 100]
     end
 
     provided input: "re-move these's: 's & + ! @ # $ % ^ & * ( ) \\ | [ ] { } / ? ~ ` = - _ , . 🎄 £ tommy'humanity fff' 'fff don't", index_limit: UInt8::MAX do

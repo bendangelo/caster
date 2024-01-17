@@ -10,7 +10,8 @@ module Executer
         kv_store = Store::KVPool.acquire(Store::KVAcquireMode::OpenOnly, collection)
         # executor_kv_lock_write!(kv_store)
 
-        Log.debug { "collection store exists, erasing: #{bucket} from #{collection}" }
+        # Log.debug { "collection store exists, erasing: #{bucket} from #{collection}" }
+        Log.warn { "flushb not implemented" }
 
         kv_action = Store::KVAction.new(bucket: bucket, store: kv_store)
 

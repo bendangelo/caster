@@ -6,11 +6,13 @@ Spectator.describe Executer::Push do
   describe ".execute" do
     context "stores words in bucket for object" do
 
-      let(text) { "hello world" }
       let(collection) { "col" }
       let(bucket) { "buck" }
       let(object) { "push_obj" }
+      let(text) { "hello world" }
       let(attrs) { UInt32[0, 1] }
+      let(keywords) { "title, jones, the" }
+      let(index_limit) { 100_u8 }
 
       let(store) do
         Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
@@ -19,7 +21,7 @@ Spectator.describe Executer::Push do
         Store::KVAction.new(bucket: bucket, store: store)
       end
       let(item) { Store::Item.new collection, bucket, object }
-      let(token) { Lexer::Token.new Lexer::TokenMode::NormalizeOnly, text, Lexer::Lang::Eng }
+      let(token) { Lexer::Token.new mode: Lexer::TokenMode::NormalizeOnly, text: text, locale: Lexer::Lang::Eng, index_limit: index_limit, keywords: keywords }
 
       before do
         Push.execute item, token, attrs
@@ -36,12 +38,18 @@ Spectator.describe Executer::Push do
       end
 
       it "associates all terms to iid" do
-        expect(action.get_iid_to_terms(1)).to eq Set.new UInt32[4211111929, 413819571]
+        expect(action.get_iid_to_terms(1)).to eq Set.new UInt32[4211111929, 413819571, 3736659679, 2346479529]
       end
 
       it "associates iid to all terms" do
         expect(action.get_term_to_iids(Store::Hasher.to_compact("hello"), 0)).to eq Set.new UInt32[1]
         expect(action.get_term_to_iids(Store::Hasher.to_compact("world"), 1)).to eq Set.new UInt32[1]
+      end
+
+      it "associates iid to all non-stopword keywords" do
+        expect(action.get_term_to_iids(Store::Hasher.to_compact("title".stem), index_limit)).to eq Set.new UInt32[1]
+        expect(action.get_term_to_iids(Store::Hasher.to_compact("jones".stem), index_limit)).to eq Set.new UInt32[1]
+        expect(action.get_term_to_iids(Store::Hasher.to_compact("the"), index_limit)).to eq nil
       end
 
     end

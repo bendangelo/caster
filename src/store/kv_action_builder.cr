@@ -20,6 +20,9 @@ module Store
 
         return 1
       else
+
+        Log.debug { "no kv collection store exists for #{collection}" }
+
         return 0
       end
     end

@@ -1,3 +1,3 @@
 module Caster
-  VERSION = "1.0.0"
+  VERSION = {{ `shards version "#{__DIR__}"`.stringify.chomp }}
 end
