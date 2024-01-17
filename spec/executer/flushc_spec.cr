@@ -26,19 +26,29 @@ Spectator.describe Executer::FlushC do
       action.set_oid_to_iid(oid, iid)
     end
 
-    context "counts indexed terms" do
+    context "pool is open" do
 
-      it "returns terms size" do
+      pre_condition do
         expect(action.get_oid_to_iid(oid)).to eq iid
         expect(action.get_iid_to_terms(iid)).to eq terms
+      end
 
-        result = FlushC.execute item
-
+      post_condition do
         expect(Dir.exists? Store::KVBuilder.path collection).to eq false
         expect(Store::KVPool.find? collection).to eq nil
+      end
+
+      it "closes opened pools" do
+        result = FlushC.execute item
 
         expect(result).to eq 1
+      end
 
+      it "deletes unopened pools" do
+        expect(Store::KVPool.close collection).to eq true
+        result = FlushC.execute item
+
+        expect(result).to eq 1
       end
 
     end
