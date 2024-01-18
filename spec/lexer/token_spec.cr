@@ -6,9 +6,10 @@ Spectator.describe Lexer::Token do
   describe ".parse_text" do
 
     let(keywords) { "" }
+    let(headers) { "" }
     let(index_limit) { Store::MAX_TERM_INDEX_SIZE }
 
-    subject(extract) { Token.new(text: input, index_limit: index_limit.to_u8, keywords: keywords).parse_text }
+    subject(extract) { Token.new(text: input, index_limit: index_limit.to_u8, keywords: keywords, headers: headers).parse_text }
 
     provided input: "banks banking bank is a bank" do
       expect(extract).to eq ["bank", 1266403283, 0]
@@ -20,6 +21,10 @@ Spectator.describe Lexer::Token do
 
     provided input: "title", keywords: "keyword, second", index_limit: 100 do
       expect(extract).to eq ["titl", 3736659679, 0, "keyword", 1902477040, 100, "second", 4023803357, 100]
+    end
+
+    provided input: "title", headers: "keyword, second", index_limit: 100 do
+      expect(extract).to eq ["titl", 3736659679, 0, "keyword", 1902477040, 0, "second", 4023803357, 0]
     end
 
     provided input: "yes where am I hello?"  do

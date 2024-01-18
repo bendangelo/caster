@@ -65,7 +65,7 @@ module Caster
   def self.start
     boot
 
-    Log.info { "=== Welcome to CASTER ===" }
+    Log.info { "=== Welcome to CASTER v#{VERSION} ===" }
     Log.info { "Starting up!" }
 
     # Spawn tasker (background thread)

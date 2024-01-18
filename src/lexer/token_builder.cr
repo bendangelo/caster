@@ -48,7 +48,7 @@ module Lexer
       {TokenMode::NormalizeOnly, Lang::Eng}
     end
 
-    def self.from(mode, text, hinted_lang = nil, index_limit = Store::MAX_TERM_INDEX_SIZE, keywords = nil)
+    def self.from(mode, text, hinted_lang = nil, index_limit = Store::MAX_TERM_INDEX_SIZE, keywords = nil, headers = nil)
 
       locale = case mode
                when TokenMode::HintedCleanup
@@ -76,7 +76,7 @@ module Lexer
                end
 
       # Build final token builder iterator
-      Token.new(mode, text, locale, index_limit, keywords || "")
+      Token.new(mode, text, locale, index_limit, keywords || "", headers || "")
     end
 
     # private def detect_lang(text : String) : Lang?
