@@ -63,10 +63,10 @@ module Caster
   end
 
   def self.start
+    boot
+
     Log.info { "=== Welcome to CASTER ===" }
     Log.info { "Starting up!" }
-
-    boot
 
     # Spawn tasker (background thread)
     # spawn_tasker
