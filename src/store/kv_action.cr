@@ -373,10 +373,43 @@ module Store
       end
     end
 
-    def batch_flush_bucket(iid : UInt32, oid : String, iid_terms_hashed : Set(UInt32))
+    # def batch_flush_terms(iid : UInt32, iid_terms_hashed : Set(UInt32))
+    #   count = 0
+    #
+    #   Log.debug { "store batch flush bucket: #{iid} with hashed terms: #{iid_terms_hashed}" }
+    #
+    #   # Delete OID <> IID association
+    #   if delete_iid_to_terms(iid)
+    #
+    #     # Delete IID from each associated term
+    #     iid_terms_hashed.each do |iid_term|
+    #       iterate_term_to_iids(iid_term) do |iids, index|
+    #         if iids.includes?(iid)
+    #           count += 1
+    #
+    #           # Remove IID from list of IIDs
+    #           iids.delete(iid)
+    #
+    #           if iids.empty?
+    #             delete_term_to_iids(iid_term, index)
+    #           else
+    #             set_term_to_iids(iid_term, iids, index)
+    #           end
+    #
+    #         end
+    #       end
+    #     end
+    #   end
+    #
+    #   count
+    # end
+
+    def batch_flush_bucket(iid : UInt32, oid : String)
       count = 0
 
-      Log.debug { "store batch flush bucket: #{iid} with hashed terms: #{iid_terms_hashed}" }
+      iid_terms = get_iid_to_terms(iid)
+
+      Log.debug { "store batch flush bucket: #{iid} with hashed terms: #{iid_terms}" }
 
       # Delete OID <> IID association
       if delete_oid_to_iid(oid) && delete_iid_to_oid(iid) && delete_iid_to_terms(iid)
@@ -385,7 +418,9 @@ module Store
         delete_iid_to_attrs(iid)
 
         # Delete IID from each associated term
-        iid_terms_hashed.each do |iid_term|
+        return 0 if iid_terms.nil?
+
+        iid_terms.each do |iid_term|
           iterate_term_to_iids(iid_term) do |iids, index|
             if iids.includes?(iid)
               count += 1

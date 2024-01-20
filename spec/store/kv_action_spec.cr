@@ -267,7 +267,7 @@ Spectator.describe Store::KVAction do
       expect(action.get_term_to_iids(term)).to eq Set{iid}
       expect(action.get_term_to_iids(term, 1)).to eq Set{iid}
 
-      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 2
+      expect(action.batch_flush_bucket(iid, object)).to eq 2
 
       expect(action.get_term_to_iids(term)).to eq nil
       expect(action.get_term_to_iids(term, 1)).to eq nil
@@ -282,7 +282,58 @@ Spectator.describe Store::KVAction do
       action.set_term_to_iids(term, Set{iid, other_iid})
       action.set_term_to_iids(term, Set{iid, other_iid}, 1)
 
-      expect(action.batch_flush_bucket(iid, object, Set{term})).to eq 2
+      expect(action.batch_flush_bucket(iid, object)).to eq 2
+
+      expect(action.get_term_to_iids(term)).to eq Set{other_iid}
+      expect(action.get_term_to_iids(term, 1)).to eq Set{other_iid}
+    end
+  end
+
+  describe "#batch_flush_terms" do
+    let(collection) { "videos" }
+    let(bucket) { "all" }
+    let(object) { "testobj" }
+    let(iid) { 1_u32 }
+    let(term) { 2_u32 }
+    let(other_iid) { 4_u32 }
+
+    let(store) do
+      Store::KVPool.acquire(Store::KVAcquireMode::Any, collection)
+    end
+    let(action) do
+      Store::KVAction.new(bucket: bucket, store: store)
+    end
+
+    before do
+      action.set_oid_to_iid(object, iid)
+      action.set_iid_to_oid(iid, object)
+      action.set_iid_to_terms(iid, Set{term})
+      action.set_term_to_iids(term, Set{iid})
+      action.set_term_to_iids(term, Set{iid}, 1)
+      action.set_iid_to_attrs(iid, UInt32[1, 1])
+    end
+
+    pending "deletes term to iids" do
+
+      expect(action.get_term_to_iids(term)).to eq Set{iid}
+      expect(action.get_term_to_iids(term, 1)).to eq Set{iid}
+
+      expect(action.batch_flush_terms(iid, object, Set{term})).to eq 2
+
+      expect(action.get_term_to_iids(term)).to eq nil
+      expect(action.get_term_to_iids(term, 1)).to eq nil
+      expect(action.get_oid_to_iid(object)).to eq nil
+      expect(action.get_iid_to_oid(iid)).to eq nil
+      expect(action.get_iid_to_terms(iid)).to eq nil
+      expect(action.get_iid_to_attrs(iid)).to eq nil
+
+    end
+
+    pending "keeps terms for other iids" do
+      action.set_term_to_iids(term, Set{iid, other_iid})
+      action.set_term_to_iids(term, Set{iid, other_iid}, 1)
+
+      expect(action.batch_flush_terms(iid, object, Set{term})).to eq 2
 
       expect(action.get_term_to_iids(term)).to eq Set{other_iid}
       expect(action.get_term_to_iids(term, 1)).to eq Set{other_iid}

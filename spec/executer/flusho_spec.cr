@@ -55,7 +55,7 @@ Spectator.describe Executer::FlushO do
 
     context "iid to terms not found" do
 
-      it "doesn't delete oid, etc" do
+      it "deletes oid, etc" do
         action.delete_iid_to_terms(iid)
 
         expect(action.get_iid_to_terms(iid)).to eq nil
@@ -63,9 +63,9 @@ Spectator.describe Executer::FlushO do
         result = FlushO.execute item
 
         expect(result).to eq 0
-        expect(action.get_oid_to_iid(object)).to_not eq nil
-        expect(action.get_iid_to_oid(iid)).to_not eq nil
-        expect(action.get_iid_to_attrs(iid)).to_not eq nil
+        expect(action.get_oid_to_iid(object)).to eq nil
+        expect(action.get_iid_to_oid(iid)).to eq nil
+        expect(action.get_iid_to_attrs(iid)).to eq nil
       end
     end
 
