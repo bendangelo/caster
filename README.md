@@ -47,7 +47,17 @@ shards build --release -Dpreview_mt
 ## Deployment
 
 ```
-docker buildx build --platform linux/arm64 -t registry.gitlab.com/bendangelo/caster:1.0.0 .
+ssh stray
+cd caster
+make
+# on stray:
+deploy.yml # change caster image version
+kamal accessory reboot caster
+
+
+# OR
+
+docker buildx build --platform linux/arm64 -t bendangelo/caster:1.0.0 .
 docker push registry.gitlab.com/bendangelo/caster
 ```
 

@@ -8,12 +8,12 @@ RUN cp /usr/lib/librocksdb.so /usr/lib/librocksdb.so.8.11
 WORKDIR /app
 COPY . /app
 
-ENV PATH /app/bin:$PATH
 ENV LD_LIBRARY_PATH /usr/lib:$LD_LIBRARY_PATH
 
 # Build Caster
 RUN shards build caster --release -Dpreview_mt
 
-CMD [ "/app/bin/caster" ]
+ENTRYPOINT ["/app/bin/caster"]
+# CMD [ "/app/bin/caster" ]
 
 EXPOSE 1491
