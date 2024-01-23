@@ -18,6 +18,7 @@ search:
 
   term_index_limit: 16
   popularity_weight: .3
+  popularity_index: 0
 
 kv:
   path: "./data/store/kv/"

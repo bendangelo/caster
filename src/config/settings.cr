@@ -81,5 +81,6 @@ module Caster
 
     property term_index_limit : UInt8 = 10
     property popularity_weight : Float32 = 0.3
+    property popularity_index : Int32
   end
 end

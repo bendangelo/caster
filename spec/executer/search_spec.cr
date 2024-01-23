@@ -99,18 +99,18 @@ Spectator.describe Executer::Search do
 
     describe "between filter" do
 
-      provided filters: [%q[{"attr": 0, "value_first": 0, "value_second": 2, "method": "between"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [2.to_u32], obj2: [0.to_u32], obj3: [3.to_u32]} do
+      provided filters: [%q[{"attr": 1, "value_first": 0, "value_second": 2, "method": "between"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: UInt32[0, 2.to_u32], obj2: UInt32[0, 0.to_u32], obj3: UInt32[0, 3.to_u32]} do
         expect(results).to eq ["obj2", "obj1"]
       end
 
-      provided filters: [%q[{"attr": 0, "value_first": 0, "value_second": 0, "method": "between"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [2.to_u32], obj2: [0.to_u32], obj3: [3.to_u32]} do
+      provided filters: [%q[{"attr": 1, "value_first": 0, "value_second": 0, "method": "between"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: UInt32[0, 2.to_u32], obj2: UInt32[0, 0.to_u32], obj3: UInt32[0, 3.to_u32]} do
         expect(results).to eq ["obj2", "obj3", "obj1"]
       end
 
     end
 
     describe "time filter" do
-      provided filters: [%q[{"attr": 0, "value_first": 10, "method": "time"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [Time.utc.to_unix.to_u32], obj2: [Time.utc.to_unix.to_u32 - 1000], obj3: [Time.utc.to_unix.to_u32]} do
+      provided filters: [%q[{"attr": 1, "value_first": 10, "method": "time"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: UInt32[0, Time.utc.to_unix.to_u32], obj2: UInt32[0, Time.utc.to_unix.to_u32 - 1000], obj3: UInt32[0, Time.utc.to_unix.to_u32]} do
         expect(results).to eq ["obj3", "obj1"]
       end
     end

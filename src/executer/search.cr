@@ -32,7 +32,7 @@ module Executer
       kv_action = Store::KVAction.new(bucket: bucket, store: kv_store)
       # fst_action = StoreFSTActionBuilder.access(fst_store)
 
-      found_iids = Hash(UInt32, Int32).new
+      found_iids = Hash(UInt32, Int64).new
 
       token.parse_text do |term, term_hashed, index|
 
@@ -41,28 +41,16 @@ module Executer
         kv_action.iterate_term_to_iids(term_hashed, 0, token.index_limit) do |iids, term_index|
 
           iids.each do |iid|
-            if filters && (attrs = kv_action.get_iid_to_attrs(iid))
-              filter_out = filters.any? do |i|
-                attr_value = attrs[i.attr]?
-                if attr_value.nil?
-                  true # not matched the filter, so discard it
-                else
-                  !Executer::Filter.execute(i.method, attr_value, i.value_first, i.value_second)
-                end
-              end
-
-              next if filter_out
-            end
 
             if order == 0
               if found_iids.has_key? iid
-                found_iids[iid] += token.index_limit.to_i32 - term_index - index
+                found_iids[iid] += token.index_limit.to_i64 - term_index - index
               else
-                found_iids[iid] = token.index_limit.to_i32 - term_index - index
+                found_iids[iid] = token.index_limit.to_i64 - term_index - index
               end
               # use attr for ordering
             elsif (attrs = kv_action.get_iid_to_attrs(iid)) && (attr_value = attrs[order - 1]?)
-              found_iids[iid] = attr_value.to_i32
+              found_iids[iid] = attr_value.to_i64
             else
               # no value, use default
               found_iids[iid] = 0
@@ -73,6 +61,40 @@ module Executer
 
         end
 
+      end
+
+      # filter iids
+      found_iids.each_key do |iid|
+
+        attrs = kv_action.get_iid_to_attrs(iid)
+
+        if attrs.nil?
+          next
+        end
+
+        if filters
+          filter_out = filters.any? do |i|
+            attr_value = attrs[i.attr]?
+            if attr_value.nil?
+              true # not matched the filter, so discard it
+            else
+              !Executer::Filter.execute(i.method, attr_value, i.value_first, i.value_second)
+            end
+          end
+
+          if filter_out
+            found_iids.delete(iid)
+            next
+          end
+        end
+
+        if attr_value = attrs[order]?
+          if order == Caster.settings.search.popularity_index
+            found_iids[iid] = (found_iids[iid] * attr_value.to_i64 * Caster.settings.search.popularity_weight + found_iids[iid] * (1 - Caster.settings.search.popularity_weight)).to_i64
+          else
+            found_iids[iid] = attr_value.to_i64
+          end
+        end
       end
 
       sorted_iids = found_iids.to_a.unstable_sort_by do |k, v|
