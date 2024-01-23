@@ -1,7 +1,7 @@
 log_level: "info"
 colorize: true
 
-inet: "localhost"
+inet: "0.0.0.0"
 port: 1491
 tcp_timeout: 300
 auth_password: "caster"

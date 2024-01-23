@@ -14,6 +14,5 @@ ENV LD_LIBRARY_PATH /usr/lib:$LD_LIBRARY_PATH
 RUN shards build caster --release -Dpreview_mt
 
 ENTRYPOINT ["/app/bin/caster"]
-# CMD [ "/app/bin/caster" ]
 
 EXPOSE 1491
