@@ -40,6 +40,11 @@ module Caster
     if Caster.settings.search.term_index_limit > ::Store::MAX_TERM_INDEX_SIZE
       Log.error { "set term index size is too large! Check settings.yml. Max size is (#{::Store::MAX_TERM_INDEX_SIZE})" }
     end
+
+    if !Dir.exists? Caster.settings.kv.path
+      Log.info { "Kv dir does not exist, creating at (#{Caster.settings.kv.path})..." }
+      Dir.mkdir_p Caster.settings.kv.path
+    end
   end
 
   def self.shutdown
@@ -63,10 +68,10 @@ module Caster
   end
 
   def self.start
-    boot
-
     Log.info { "=== Welcome to CASTER v#{VERSION} ===" }
     Log.info { "Starting up!" }
+
+    boot
 
     # Spawn tasker (background thread)
     # spawn_tasker
