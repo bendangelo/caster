@@ -1,8 +1,13 @@
 module Pipe
 
+  struct FilterParams
+    include JSON::Serializable
+    property attr : UInt32, value_first : UInt32, value_second : UInt32 = 0, method : String
+  end
+
   struct QueryParams
     include JSON::Serializable
-    property collection : String, bucket : String, limit : Int32?, lang : String?, q : String, offset : Int32?, greater_than : Tuple(UInt32, UInt32)?, less_than : Tuple(UInt32, UInt32)?, equal : Tuple(UInt32, UInt32)?, dir : Int32 = 0, order : Int32 = 0
+    property collection : String, bucket : String, limit : Int32?, lang : String?, q : String, offset : Int32?, filters : Array(FilterParams)?, dir : Int32 = 0, order : Int32 = 0
   end
 
   class SearchCommand
@@ -25,10 +30,6 @@ module Pipe
 
         query_lang = params.lang
 
-        greater_than = params.greater_than
-        less_than = params.less_than
-        equal = params.equal
-
         if query_limit < 1 || query_limit > Caster.settings.search.query_limit_maximum
           return CommandResult.error CommandError::PolicyReject, "LIMIT out of minimum/maximum bounds"
         else
@@ -42,7 +43,7 @@ module Pipe
           return CommandResult.error :query_error if item.is_a? Store::ItemError
           return CommandResult.error :query_error if token.nil?
 
-          results = Executer::Search.execute(item, token, query_limit, query_offset, greater_than, less_than, equal, params.dir, params.order)
+          results = Executer::Search.execute(item, token, query_limit, query_offset, params.filters, params.dir, params.order)
 
           if results.empty?
             event_value = "QUERY"

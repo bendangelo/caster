@@ -21,9 +21,7 @@ Spectator.describe Executer::Search do
     let(oids) { {} of Symbol => String }
     let(attrs) { {} of Symbol => Array(UInt32) }
     let(query) { "" }
-    let(greater_than) { nil }
-    let(less_than) { nil }
-    let(equal) { nil }
+    let(filters) { [] of String }
     let(dir) { 0 } # DESC
     let(order) { 0 }
     let(keywords) { {} of Symbol => String }
@@ -71,7 +69,13 @@ Spectator.describe Executer::Search do
       action.delete_iid_to_attrs(:obj6.to_i.to_u32)
     end
 
-    subject(results) { Search.execute item, token, limit, offset, greater_than, less_than, equal, dir, order }
+    subject(results) do
+      filter_params = filters.map do |f|
+        Pipe::FilterParams.from_json f
+      end
+
+      Search.execute item, token, limit, offset, filter_params, dir, order
+    end
 
     context "setup test" do
 
@@ -93,17 +97,26 @@ Spectator.describe Executer::Search do
 
     end
 
-    context "gt, lt, eq" do
+    describe "between filter" do
 
-      provided less_than: {0_u32, 2_u32}, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+      provided filters: [%q[{"attr": 0, "value_first": 0, "value_second": 2, "method": "between"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [2.to_u32], obj2: [0.to_u32], obj3: [3.to_u32]} do
         expect(results).to eq ["obj2", "obj1"]
       end
 
-      provided greater_than: {0_u32, 0_u32}, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
-        expect(results).to eq ["obj3", "obj1"]
+      provided filters: [%q[{"attr": 0, "value_first": 0, "value_second": 0, "method": "between"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [2.to_u32], obj2: [0.to_u32], obj3: [3.to_u32]} do
+        expect(results).to eq ["obj2", "obj3", "obj1"]
       end
 
-      provided equal: {0_u32, 2_u32}, query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
+    end
+
+    describe "time filter" do
+      provided filters: [%q[{"attr": 0, "value_first": 10, "method": "time"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [Time.utc.to_unix.to_u32], obj2: [Time.utc.to_unix.to_u32 - 1000], obj3: [Time.utc.to_unix.to_u32]} do
+        expect(results).to eq ["obj3", "obj1"]
+      end
+    end
+
+    describe "equal filter" do
+      provided filters: [%q[{"attr": 0, "value_first": 2, "method": "equal"}]], query: "fire", oids: {obj1: "today I say fire", obj2: "fire", obj3: "fire world"}, attrs: {obj1: [1.to_u32], obj2: [0.to_u32], obj3: [2.to_u32]} do
         expect(results).to eq ["obj3"]
       end
 

@@ -5,7 +5,7 @@ module Executer
       @@debug
     end
 
-    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, greater_than : Tuple(UInt32, UInt32)? = nil, less_than : Tuple(UInt32, UInt32)? = nil, equal : Tuple(UInt32, UInt32)? = nil, dir = 0, order = 0)
+    def self.execute(store : Store::Item, token : Lexer::Token, limit : Int32, offset : Int32, filters : Array(Pipe::FilterParams)? = nil, dir = 0, order = 0)
 
       # general_kv_access_lock_read!
       # general_fst_access_lock_read!
@@ -41,13 +41,17 @@ module Executer
         kv_action.iterate_term_to_iids(term_hashed, 0, token.index_limit) do |iids, term_index|
 
           iids.each do |iid|
-            # filter values
-            if greater_than || less_than || equal
-              if attrs = kv_action.get_iid_to_attrs(iid)
-                next if greater_than && attrs[greater_than[0]]? != nil && attrs[greater_than[0]] <= greater_than[1]
-                next if less_than && attrs[less_than[0]]? != nil && attrs[less_than[0]] >= less_than[1]
-                next if equal && attrs[equal[0]]? != nil && attrs[equal[0]] != equal[1]
+            if filters && (attrs = kv_action.get_iid_to_attrs(iid))
+              filter_out = filters.any? do |i|
+                attr_value = attrs[i.attr]?
+                if attr_value.nil?
+                  true # not matched the filter, so discard it
+                else
+                  !Executer::Filter.execute(i.method, attr_value, i.value_first, i.value_second)
+                end
               end
+
+              next if filter_out
             end
 
             if order == 0
@@ -94,41 +98,41 @@ module Executer
   end
 
   def self.suggest_words
-        # next if iids.nil?
-        # higher_limit = APP_CONF.store.kv.retain_word_objects
-        # alternates_try = APP_CONF.channel.search.query_alternates_try
-        #
-        # if iids.size < higher_limit && alternates_try > 0
-        #   Log.debug { "not enough iids were found (#{iids.size}/#{higher_limit}), completing for term: #{term}" }
-        #
-        #   if suggested_words = fst_action.suggest_words(term, alternates_try + 1, 1)
-        #     iids_new_len = iids.size
-        #
-        #     suggested_words.each do |suggested_word|
-        #       next if suggested_word == term
-        #
-        #       Log.debug { "got completed word: #{suggested_word} for term: #{term}" }
-        #
-        #       if let Some(suggested_iids) = kv_action.get_term_to_iids(StoreTermHash.new(suggested_word)).unwrap_or(nil)
-        #         suggested_iids.each do |suggested_iid|
-        #           unless iids.include?(suggested_iid)
-        #             iids << suggested_iid
-        #             iids_new_len += 1
-        #
-        #             if iids_new_len >= higher_limit
-        #               Log.debug { "got enough completed results for term: #{term}" }
-        #               break
-        #             end
-        #           end
-        #         end
-        #       end
-        #     end
-        #
-        #     Log.debug { "done completing results for term: #{term}, now #{iids_new_len} results" }
-        #   else
-        #     Log.debug { "did not get any completed word for term: #{term}" }
-        #     end
-        # end
+    # next if iids.nil?
+    # higher_limit = APP_CONF.store.kv.retain_word_objects
+    # alternates_try = APP_CONF.channel.search.query_alternates_try
+    #
+    # if iids.size < higher_limit && alternates_try > 0
+    #   Log.debug { "not enough iids were found (#{iids.size}/#{higher_limit}), completing for term: #{term}" }
+    #
+    #   if suggested_words = fst_action.suggest_words(term, alternates_try + 1, 1)
+    #     iids_new_len = iids.size
+    #
+    #     suggested_words.each do |suggested_word|
+    #       next if suggested_word == term
+    #
+    #       Log.debug { "got completed word: #{suggested_word} for term: #{term}" }
+    #
+    #       if let Some(suggested_iids) = kv_action.get_term_to_iids(StoreTermHash.new(suggested_word)).unwrap_or(nil)
+    #         suggested_iids.each do |suggested_iid|
+    #           unless iids.include?(suggested_iid)
+    #             iids << suggested_iid
+    #             iids_new_len += 1
+    #
+    #             if iids_new_len >= higher_limit
+    #               Log.debug { "got enough completed results for term: #{term}" }
+    #               break
+    #             end
+    #           end
+    #         end
+    #       end
+    #     end
+    #
+    #     Log.debug { "done completing results for term: #{term}, now #{iids_new_len} results" }
+    #   else
+    #     Log.debug { "did not get any completed word for term: #{term}" }
+    #     end
+    # end
 
   end
 
