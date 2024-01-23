@@ -1,5 +1,5 @@
 # Define variables
-VERSION := $(shell shards version)
+VERSION := $(shell grep '^version' shard.yml | awk '{print $$2}')
 IMAGE_NAME := bendangelo/caster
 
 # Define targets and their commands
