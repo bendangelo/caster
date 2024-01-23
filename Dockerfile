@@ -1,4 +1,4 @@
-FROM crystallang/crystal:latest AS build
+FROM 84codes/crystal:master-ubuntu-jammy AS build
 
 # Install Dependencies
 ARG DEBIAN_FRONTEND=noninteractive
