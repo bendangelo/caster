@@ -14,6 +14,6 @@ ENV LD_LIBRARY_PATH /usr/lib:$LD_LIBRARY_PATH
 # Build Caster
 RUN shards build caster --release -Dpreview_mt
 
-CMD [ "caster" ]
+CMD [ "/app/bin/caster" ]
 
 EXPOSE 1491
