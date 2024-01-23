@@ -47,7 +47,7 @@ shards build --release -Dpreview_mt
 ## Deployment
 
 ```
-docker build -t registry.gitlab.com/bendangelo/caster .
+docker buildx build --platform linux/arm64 -t registry.gitlab.com/bendangelo/caster:1.0.0 .
 docker push registry.gitlab.com/bendangelo/caster
 ```
 
