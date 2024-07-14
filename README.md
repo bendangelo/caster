@@ -4,6 +4,8 @@ Text search engine based on [Sonic](https://github.com/valeriansaliou/sonic).
 This was originally for a video search engine. I needed something that could
 index fast and was lightweight.
 
+Client is here: [Caster Ruby](https://github.com/bendangelo/caster-ruby).
+
 One major issue is the app will hash strings into 32bit ints and collisions are
 fairly common. I would recommend upgrading this to use 64bits.
 
