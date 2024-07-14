@@ -1,6 +1,13 @@
-# caster
+# Caster
 
-Text search engine
+Text search engine based on [Sonic](https://github.com/valeriansaliou/sonic).
+This was originally for a video search engine. I needed something that could
+index fast and was lightweight.
+
+One major issue is the app will hash strings into 32bit ints and collisions are
+fairly common. I would recommend upgrading this to use 64bits.
+
+I'm releasing this for the Crystal community to learn from and extend.
 
 ## Installation
 
@@ -47,23 +54,13 @@ shards build --release -Dpreview_mt
 ## Deployment
 
 ```
-ssh stray
-cd caster
-make
-# on stray:
-deploy.yml # change caster image version
-kamal accessory reboot caster
-
-
-# OR
-
 docker buildx build --platform linux/arm64 -t bendangelo/caster:1.0.0 .
-docker push registry.gitlab.com/bendangelo/caster
+docker push *registry here*
 ```
 
 ## Contributing
 
-1. Fork it (<https://github.com/your-github-user/caster/fork>)
+1. Fork it (<https://github.com/bendangelo/caster/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
@@ -71,4 +68,4 @@ docker push registry.gitlab.com/bendangelo/caster
 
 ## Contributors
 
-- [Ben D'Angelo](https://github.com/your-github-user) - creator and maintainer
+- [Ben D'Angelo](https://github.com/bendangelo) - creator and maintainer

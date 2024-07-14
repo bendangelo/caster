@@ -24,10 +24,6 @@ dependencies:
   rwlock:
     github: spider-gazelle/readers-writer
 
-  # dispatch:
-  #   github: bendangelo/dispatch
-  #   branch: upgraded
-
 development_dependencies:
   spectator:
     gitlab: arctic-fox/spectator
